@@ -1,0 +1,12 @@
+data
+demo
+*__pycache__
+*.DS_Store
+*.pyc
+results
+tbdata*
+*.zip
+preTrainModel
+.idea
+trainedModelsMulti
+trainedModelsSingle
