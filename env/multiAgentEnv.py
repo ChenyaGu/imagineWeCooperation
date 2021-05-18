@@ -133,7 +133,23 @@ class ResetMultiAgentChasingForExp:
 
         state = np.array(initPlayerGrids + targetPositions)
         return state
-    
+class ResetMultiAgentNewtonChasingExp:#to be modify
+    def __init__(self, numTotalAgents, numBlocks):
+        self.positionDimension = 2
+        self.numTotalAgents = numTotalAgents
+        self.numBlocks = numBlocks
+
+    def __call__(self):
+        getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
+        getAgentRandomVel = lambda: np.zeros(self.positionDimension)
+        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
+
+        getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
+        getBlockSpeed = lambda: np.zeros(self.positionDimension)
+
+        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
+        state = np.array(agentsState + blocksState)
+        return state  
 class ResetMultiAgentChasing:
     def __init__(self, numTotalAgents, numBlocks):
         self.positionDimension = 2

@@ -23,19 +23,26 @@ class NewtonChaseTrial():
         self.checkTerminationOfTrial = checkTerminationOfTrial
         self.memorySize = 25
 
-    def __call__(self, targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
+    def __call__(self,initState, score, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
         initialTime = time.get_ticks()
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
 
-        from collections import deque
-        dequeState = deque(maxlen=self.memorySize)
+        # from collections import deque
+        # dequeState = deque(maxlen=self.memorySize)
         pause = True
+        state = initState
         while pause:
             pg.time.delay(32)
-            dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
+            # dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
             # targetPositions, playerPositions, action, currentStopwatch, screen, timeStepforDraw = self.humanController(
             #     targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw, dequeState,
             #     sheepNums)
+
+            targetPositions = getTargetPos(state)
+            playerPositions = getPlayerPos(state)
+            screen = self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
+            pg.display.update()
+
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pause = True
@@ -45,16 +52,15 @@ class NewtonChaseTrial():
             humanAction=self.joyStickController()
             action1 = np.array(humanAction[0]) * self.wolfSpeedRatio
             action2 = np.array(humanAction[1]) * self.wolfSpeedRatio
-            sheepAction = [np.array(self.chooseGreedyAction(self.sheepPolicy(i, np.array(dequeState) * 10))) / 10 for i in range(sheepNums) ]
+            # sheepAction = [np.array(self.chooseGreedyAction(self.sheepPolicy(i, np.array(dequeState) * 10))) / 10 for i in range(sheepNums) ]
+            sheepAction = self.sheepPolicy(state)
 
+            nextState = self.transit(state,action)
+            # targetPositions=[self.stayInBoundary(np.add(targetPosition, singleAction))  for (targetPosition,singleAction)  in zip(targetPositions,sheepAction)]
+            # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
 
-            targetPositions=[self.stayInBoundary(np.add(targetPosition, singleAction))  for (targetPosition,singleAction)  in zip(targetPositions,sheepAction)]
-            playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
-
-            remainningTime = max(0, self.finishTime - newStopwatch)
-
-            screen = self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
-            pg.display.update()
+            # remainningTime = max(0, self.finishTime - newStopwatch)
+            
             eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions)
 
             pause = self.checkTerminationOfTrial(action, eatenFlag, currentStopwatch)
@@ -79,7 +85,7 @@ class NewtonChaseTrial():
         # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
         score = np.add(score, addSocre)
-        return results, targetPositions, playerPositions, score, currentStopwatch, eatenFlag, timeStepforDraw
+        return results,nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
 
 class AttributionTrail:
     def __init__(self, totalScore, saveImageDir, saveImage, drawAttributionTrail):
