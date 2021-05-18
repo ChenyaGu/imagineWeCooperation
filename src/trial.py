@@ -23,8 +23,7 @@ class NewtonChaseTrial():
         self.checkTerminationOfTrial = checkTerminationOfTrial
         self.memorySize = 25
 
-    def __call__(self, targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw,
-                 sheepNums):
+    def __call__(self, targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
         initialTime = time.get_ticks()
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
 
