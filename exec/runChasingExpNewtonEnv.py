@@ -5,7 +5,8 @@ import pandas as pd
 import collections as co
 import itertools as it
 import numpy as np
-import posixpath
+import random
+
 import pygame as pg
 from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, DrawAttributionTrail
@@ -153,7 +154,9 @@ def main():
 
     humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
-    actionSpace = list(it.product([0, 1, -1], repeat=2))
+    sheepRandomPolicy = lambda numSheep: np.random.uniform(-0.5,0.5,[numSheep,5])
+    getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
+    # actionSpace = list(it.product([0, 1, -1], repeat=2))
     trial = Trial(actionSpace, killzone, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten, attributionTrail, humanController)
     experiment = Experiment(trial, writer, experimentValues, reset, updateWorld, drawImage, writerPath)
     giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
