@@ -9,7 +9,7 @@ class JoyStickForceControllers():
 
     def __init__(self,joyStickIdList):
         pg.joystick.init()
-
+        joyStickIdList = range(pg.joystick.get_count())
         self.joystickList = [pg.joystick.Joystick(joyStickId) for joyStickId in joyStickIdList ]
         [joystick.init() for joystick in self.joystickList]
 
@@ -17,14 +17,14 @@ class JoyStickForceControllers():
         actionList = []
         [joystick.init() for joystick in self.joystickList]
         for joystick in self.joystickList:
-            action = [0, 0]
+            action = [0, 0, 0, 0, 0]
             numAxes = joystick.get_numaxes()
 
 
             for i in range(2):
                 # axis = joystick.get_axis(i)
                 if abs(joystick.get_axis(i)) > 0.5:
-                    action[i] =joystick.get_axis(i)/abs(joystick.get_axis(i))*(abs(joystick.get_axis(i)) - 0.5) *2
+                    action[2*i+1] =joystick.get_axis(i)/abs(joystick.get_axis(i))*(abs(joystick.get_axis(i)) - 0.5) *2
                
                 
                     # print(axis)
@@ -41,7 +41,7 @@ class JoyStickController():
 
     def __init__(self,joyStickId):
         pg.joystick.init()
-
+        
         self.joystick = pg.joystick.Joystick(joyStickId)
         self.joystick.init()
 
@@ -80,7 +80,7 @@ class JoyStickControllers():
 
     def __init__(self,joyStickIdList):
         pg.joystick.init()
-
+        joyStickIdList = range(pg.joystick.get_count())
         self.joystickList = [pg.joystick.Joystick(joyStickId) for joyStickId in joyStickIdList ]
         [joystick.init() for joystick in self.joystickList]
 

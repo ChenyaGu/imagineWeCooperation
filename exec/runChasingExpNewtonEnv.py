@@ -10,7 +10,7 @@ import random
 import pygame as pg
 from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, DrawAttributionTrail
-from src.controller import HumanController, ModelController
+from src.controller import HumanController, ModelController,JoyStickForceControllers
 from src.updateWorld import  UpdateWorld, StayInBoundary
 from src.writer import WriteDataFrameToCSV,saveToPickle
 from src.trial import Trial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
@@ -151,7 +151,7 @@ def main():
     checkEaten = CheckEaten(killzone, isAnyKilled)
     totalScore = 10
     attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
-
+    humanController = JoyStickForceControllers
     humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
     sheepRandomPolicy = lambda numSheep: np.random.uniform(-0.5,0.5,[numSheep,5])
