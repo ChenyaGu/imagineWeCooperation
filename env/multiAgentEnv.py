@@ -108,65 +108,37 @@ class RewardSheep:
                     sheepReward -= self.collisionPunishment
             reward.append(sheepReward)
         return reward
-def samplePosition(bounds):
-    positionX = np.random.uniform(bounds[0], bounds[2])
-    positionY = np.random.uniform(bounds[1], bounds[3])
-    position = [positionX, positionY]
+
+
+def samplePosition(gridSize,positionDimension):
+    randomPos = lambda: np.random.uniform(0, gridSize - 1, positionDimension)
+    position = list(randomPos())
     return position
 
-class ResetMultiAgentChasingForExp:
-    def __init__(self, bounds, numPlayers, minDistance):
-        self.bounds = bounds
+
+class ResetMultiAgentNewtonChasing:
+    def __init__(self, gridSize, numPlayers, minDistance):
+        self.positionDimension = 2
+        self.gridSize = gridSize
         self.numPlayers = numPlayers
         self.minDistance = minDistance
+    def __call__(self, numSheeps):
+        initAgentRandomPos = [samplePosition(self.gridSize, self.positionDimension) for ID in range(self.numPlayers)]
+        initAgentZeroVel = lambda: np.zeros(self.positionDimension)
 
-    def __call__(self,numSheep):
+        initSheepRandomPos = [samplePosition(self.gridSize, self.positionDimension) for sheepID in range(self.numSheeps)]
+        initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
 
-        initPlayerGrids = [samplePosition(self.bounds) for i in range(self.numPlayers)]
-        targetPositions = [samplePosition(self.bounds) for i in range(numSheep)]
-
-        for i,targetPos in enumerate(targetPositions):
-            proposalPos = targetPos
-            while np.all(np.array([np.linalg.norm(np.array(humanGrid) - np.array(targetPos)) for humanGrid in initPlayerGrids]) < self.minDistance):
-                proposalPos = samplePosition(self.bounds)
-            targetPositions[i] = proposalPos
-
-        state = np.array(initPlayerGrids + targetPositions)
-        return state
-class ResetMultiAgentNewtonChasingExp:#to be modify
-    def __init__(self, numTotalAgents, numBlocks):
-        self.positionDimension = 2
-        self.numTotalAgents = numTotalAgents
-        self.numBlocks = numBlocks
-
-    def __call__(self):
-        getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
-        getAgentRandomVel = lambda: np.zeros(self.positionDimension)
-        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-
-        getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
-        getBlockSpeed = lambda: np.zeros(self.positionDimension)
-
-        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
-        state = np.array(agentsState + blocksState)
+        for i, initSheepRandomPos in enumerate(initSheepRandomPos):
+            proposalPos = initSheepRandomPos
+            while np.all(np.array([np.linalg.norm(np.array(agentPos) - np.array(initSheepRandomPos)) for agentPos in
+                                   initAgentRandomPos]) < self.minDistance):
+                proposalPos = samplePosition(self.gridSize, self.positionDimension)
+            initSheepRandomPos[i] = proposalPos
+        agentsState = initAgentRandomPos + [list(initAgentZeroVel()) for ID in range(self.numPlayers)]
+        sheepState = initSheepRandomPos + [list(initSheepRandomVel()) for sheepID in range(self.numSheeps)]
+        state = np.array(agentsState + sheepState)
         return state  
-class ResetMultiAgentChasing:
-    def __init__(self, numTotalAgents, numBlocks):
-        self.positionDimension = 2
-        self.numTotalAgents = numTotalAgents
-        self.numBlocks = numBlocks
-
-    def __call__(self):
-        getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
-        getAgentRandomVel = lambda: np.zeros(self.positionDimension)
-        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
-
-        getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
-        getBlockSpeed = lambda: np.zeros(self.positionDimension)
-
-        blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
-        state = np.array(agentsState + blocksState)
-        return state
 
 
 class Observe:
