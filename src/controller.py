@@ -5,6 +5,37 @@ import itertools as it
 import math
 import os
 import collections as co
+class JoyStickForceControllers():
+
+    def __init__(self,joyStickIdList):
+        pg.joystick.init()
+
+        self.joystickList = [pg.joystick.Joystick(joyStickId) for joyStickId in joyStickIdList ]
+        [joystick.init() for joystick in self.joystickList]
+
+    def __call__(self):
+        actionList = []
+        [joystick.init() for joystick in self.joystickList]
+        for joystick in self.joystickList:
+            action = [0, 0]
+            numAxes = joystick.get_numaxes()
+
+
+            for i in range(2):
+                # axis = joystick.get_axis(i)
+                if abs(joystick.get_axis(i)) > 0.5:
+                    action[i] =joystick.get_axis(i)/abs(joystick.get_axis(i))*(abs(joystick.get_axis(i)) - 0.5) *2
+               
+                
+                    # print(axis)
+                actionList.append(action)
+            print(action)
+
+        # joystickSpaceSize = len(self.joystickList) * numAxes
+
+        # actionList = [0 if abs(actionList[i]) < 0.5 else actionList[i] for i in range(joystickSpaceSize)]
+        # action = [actionList[i:i + 2] for i in range(0, len(actionList), numAxes)]
+        return  actionList
 
 class JoyStickController():
 
