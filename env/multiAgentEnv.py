@@ -126,19 +126,17 @@ class ResetMultiAgentNewtonChasing:
         initAgentRandomPos = [samplePosition(self.gridSize, self.positionDimension) for ID in range(self.numPlayers)]
         initAgentZeroVel = lambda: np.zeros(self.positionDimension)
 
-        initSheepRandomPos = [samplePosition(self.gridSize, self.positionDimension) for sheepID in range(self.numSheeps)]
+        initSheepRandomPos = [samplePosition(self.gridSize, self.positionDimension) for sheepID in range(numSheeps)]
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
-
-        for i, initSheepRandomPos in enumerate(initSheepRandomPos):
-            proposalPos = initSheepRandomPos
-            while np.all(np.array([np.linalg.norm(np.array(agentPos) - np.array(initSheepRandomPos)) for agentPos in
+        for i, sheepPos in enumerate(initSheepRandomPos):
+            while np.all(np.array([np.linalg.norm(np.array(agentPos) - np.array(sheepPos)) for agentPos in
                                    initAgentRandomPos]) < self.minDistance):
-                proposalPos = samplePosition(self.gridSize, self.positionDimension)
-            initSheepRandomPos[i] = proposalPos
+                sheepPos = samplePosition(self.gridSize, self.positionDimension)
+            initSheepRandomPos[i] = sheepPos
         agentsState = initAgentRandomPos + [list(initAgentZeroVel()) for ID in range(self.numPlayers)]
-        sheepState = initSheepRandomPos + [list(initSheepRandomVel()) for sheepID in range(self.numSheeps)]
+        sheepState = initSheepRandomPos + [list(initSheepRandomVel()) for sheepID in range(numSheeps)]
         state = np.array(agentsState + sheepState)
-        return state  
+        return state
 
 
 class Observe:
