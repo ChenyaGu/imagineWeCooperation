@@ -5,7 +5,14 @@ import numpy as np
 import scipy.stats as stats
 import random
 import os
+class RandomNewtonMovePolicy:
+    def  __init__(self,numplayers):
+        self.numplayers = numplayers
 
+    def __call__(self,state):
+        numSheeps = len(state) - self.numplayers
+        sheepActions = np.random.uniform(-1,1,[numSheeps,5])
+        return list(sheepActions)
 class  RandomMovePolicy:
     def __init__(self,actionSpace):
         self.actionSpace=actionSpace

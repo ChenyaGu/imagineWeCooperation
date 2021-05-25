@@ -13,17 +13,17 @@ from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExper
 from src.controller import HumanController, ModelController,JoyStickForceControllers
 from src.updateWorld import  UpdateWorld, StayInBoundary
 from src.writer import WriteDataFrameToCSV,saveToPickle
-from src.trial import Trial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
-from src.experiment import Experiment
-from src.sheepPolicy import RandomMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction #GenerateModel, restoreVariables, ApproximatePolicy
-from env.multiAgentEnv import ResetMultiAgentChasingForExp,TransitMultiAgentChasing, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, IntegrateState, getPosFromAgentState,getVelFromAgentState 
+from src.trial import NewtonChaseTrial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
+from src.experiment import NewtonExperiment
+from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction #GenerateModel, restoreVariables, ApproximatePolicy
+from env.multiAgentEnv import ResetMultiAgentNewtonChasing,TransitMultiAgentChasingForExp, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, IntegrateState, getPosFromAgentState,getVelFromAgentState 
 from collections import OrderedDict
 #
 def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums']=[2,4,8]
+    manipulatedVariables['sheepNums']=[2]
     trailNumEachCondition = 1
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -33,7 +33,7 @@ def main():
     AllConditions=parametersAllCondtion*trailNumEachCondition
 
     numWolves = 2
-    numSheeps = 1
+    numSheeps = 2
     numBlocks = 2
 
 
@@ -61,14 +61,14 @@ def main():
     bounds = [0, 0, gridSize - 1, gridSize - 1]
     minDistanceForReborn = 5
     numPlayers = 2
-    reset = ResetMultiAgentChasingForExp(bounds, numPlayers, minDistanceForReborn)
+    reset = ResetMultiAgentNewtonChasing(gridSize, numPlayers, minDistanceForReborn)
 
     reshapeAction = ReshapeAction()
     getCollisionForce = GetCollisionForce()
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,  getCollisionForce, getPosFromAgentState)
     integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState, getPosFromAgentState)
-    transit = TransitMultiAgentChasing(numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+    transit = TransitMultiAgentChasingForExp(reshapeAction, applyActionForce, applyEnvironForce, integrateState)
     # minDistanceForReborn
     # updateWorld = UpdateWorld(bounds,  minDistanceForReborn)
 
@@ -135,30 +135,31 @@ def main():
     stayInBoundary = StayInBoundary(xBoundary, yBoundary)
 
 ############
-    actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    preyPowerRatio = 3
-    sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
-    numActionSpace = len(sheepActionSpace)
+    # actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
+    # preyPowerRatio = 3
+    # sheepActionSpace = list(map(tuple, np.array(actionSpace) * preyPowerRatio))
+    # numActionSpace = len(sheepActionSpace)
 
-    actionSpaceStill = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
-    sheepActionSpaceStill = list(map(tuple, np.array(actionSpaceStill) * preyPowerRatio))
-    numActionSpaceStill = len(sheepActionSpaceStill)
+    # actionSpaceStill = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
+    # sheepActionSpaceStill = list(map(tuple, np.array(actionSpaceStill) * preyPowerRatio))
+    # numActionSpaceStill = len(sheepActionSpaceStill)
 
 
-    sheepPolicy=RandomMovePolicy(sheepActionSpace)
+    sheepPolicy = RandomNewtonMovePolicy(numPlayers)
 
     checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
     checkEaten = CheckEaten(killzone, isAnyKilled)
     totalScore = 10
     attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
     humanController = JoyStickForceControllers
-    humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
+    humanController =lambda: list(np.random.uniform(-1,1,[2,5]))
+    # humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
     sheepRandomPolicy = lambda numSheep: np.random.uniform(-0.5,0.5,[numSheep,5])
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     # actionSpace = list(it.product([0, 1, -1], repeat=2))
-    trial = Trial(actionSpace, killzone, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten, attributionTrail, humanController)
-    experiment = Experiment(trial, writer, experimentValues, reset, updateWorld, drawImage, writerPath)
+    trial = NewtonChaseTrial(numPlayers, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,sheepPolicy,transit)
+    experiment = NewtonExperiment(trial, writer, experimentValues, reset, drawImage, writerPath)
     giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
 
     # drawImage(introductionImage)

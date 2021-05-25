@@ -10,7 +10,7 @@ from src.updateWorld import InitialWorld
 import random
 import os
 class NewtonChaseTrial():
-    def __init__(self,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,sheepPolicy):
+    def __init__(self,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,sheepPolicy,transit):
         self.numOfWolves = numOfWolves
         self.humanController = humanController
         self.drawNewState = drawNewState
@@ -18,19 +18,23 @@ class NewtonChaseTrial():
         self.beanReward = 1
         self.checkEaten = checkEaten
         self.checkTerminationOfTrial = checkTerminationOfTrial
-        self.memorySize = 25
+        # self.memorySize = 25
+        self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos    
+        self.sheepPolicy = sheepPolicy
+        self.transit = transit
     def __call__(self,initState, score, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
         initialTime = time.get_ticks()
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
-        getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
-        getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves,self.numOfWolves + sheepNums)]
+        getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
+        getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves,self.numOfWolves + sheepNums)]
         # from collections import deque
         # dequeState = deque(maxlen=self.memorySize)
         pause = True
         state = initState
         remainningTime = 0
         currentScore = [0,0]
+        newStopwatch = currentStopwatch
         while pause:
             pg.time.delay(32)
             # dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
@@ -38,7 +42,7 @@ class NewtonChaseTrial():
             #     targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw, dequeState,
             #     sheepNums)
 
-            targetPositions = getTargetPos(state,sheepNums)
+            targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
             screen = self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
             pg.display.update()
@@ -49,7 +53,7 @@ class NewtonChaseTrial():
                     pg.quit()
                 elif event.type == self.stopwatchEvent:
                     newStopwatch = newStopwatch + self.stopwatchUnit
-            humanAction=self.joyStickController()
+            humanAction=self.humanController()
             # action1 = np.array(humanAction[0]) * self.wolfSpeedRatio
             # action2 = np.array(humanAction[1]) * self.wolfSpeedRatio
             # sheepAction = [np.array(self.chooseGreedyAction(self.sheepPolicy(i, np.array(dequeState) * 10))) / 10 for i in range(sheepNums) ]
@@ -60,10 +64,10 @@ class NewtonChaseTrial():
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
 
             # remainningTime = max(0, self.finishTime - newStopwatch)
-            
+            state = nextState
             eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions)
 
-            pause = self.checkTerminationOfTrial(action, eatenFlag, currentStopwatch)
+            # pause = self.checkTerminationOfTrial(action, eatenFlag, currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
 
