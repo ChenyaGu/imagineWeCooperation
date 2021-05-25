@@ -21,7 +21,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums']=[2,4,8]
+    manipulatedVariables['sheepNums']=[1,2,4]
     trailNumEachCondition = 1
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -34,7 +34,7 @@ def main():
     bounds = [0, 0, gridSize - 1, gridSize - 1]
     minDistanceForReborn = 5
     numPlayers = 2
-    initialWorld = InitialWorld(bounds, numPlayers, minDistanceForReborn)
+    initialWorld = InitialWorldInitialWorld(bounds, numPlayers, minDistanceForReborn)
     updateWorld = UpdateWorld(bounds,  minDistanceForReborn)
 
     screenWidth = 800
