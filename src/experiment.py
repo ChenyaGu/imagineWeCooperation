@@ -19,6 +19,7 @@ class NewtonExperiment():
         blockResult=[]
         for conditon in trailCondtions:
             sheepNums = conditon['sheepNums']
+            print(sheepNums)
             initState = self.reset(sheepNums)
             currentStopwatch = 0
             timeStepforDraw = 0

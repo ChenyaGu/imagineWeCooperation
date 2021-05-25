@@ -16,15 +16,15 @@ from src.writer import WriteDataFrameToCSV,saveToPickle
 from src.trial import NewtonChaseTrial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
 from src.experiment import NewtonExperiment
 from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction #GenerateModel, restoreVariables, ApproximatePolicy
-from env.multiAgentEnv import ResetMultiAgentNewtonChasing,TransitMultiAgentChasingForExp, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, IntegrateState, getPosFromAgentState,getVelFromAgentState 
+from env.multiAgentEnv import StayInBoundaryByReflectVelocity,ResetMultiAgentNewtonChasing,TransitMultiAgentChasingForExp, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, IntegrateState, getPosFromAgentState,getVelFromAgentState
 from collections import OrderedDict
 #
 def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums']=[2]
-    trailNumEachCondition = 1
+    manipulatedVariables['sheepNums']=[1,2,4]
+    trailNumEachCondition = 6
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -33,8 +33,8 @@ def main():
     AllConditions=parametersAllCondtion*trailNumEachCondition
 
     numWolves = 2
-    numSheeps = 2
-    numBlocks = 2
+    numSheeps = max(manipulatedVariables['sheepNums'])
+    numBlocks = 0
 
 
     numAgents = numWolves + numSheeps
@@ -48,9 +48,9 @@ def main():
     blockSize = 0.2
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
-    wolfMaxSpeed = 1.0
+    wolfMaxSpeed = 1000
     blockMaxSpeed = None
-    sheepMaxSpeedOriginal = 1.3
+    sheepMaxSpeedOriginal = 1000
     # sheepMaxSpeed = sheepMaxSpeedOriginal * sheepSpeedMultiplier
     sheepMaxSpeed = sheepMaxSpeedOriginal
 
@@ -63,12 +63,17 @@ def main():
     numPlayers = 2
     reset = ResetMultiAgentNewtonChasing(gridSize, numPlayers, minDistanceForReborn)
 
+    stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity( [0, gridSize - 1], [0, gridSize - 1])
+    def checkBoudary(agentState):
+        newState = stayInBoundaryByReflectVelocity(agentState[0:2],agentState[2:])
+        return newState
+    checkAllAgents = lambda states:[checkBoudary(agentState) for agentState in states]
     reshapeAction = ReshapeAction()
     getCollisionForce = GetCollisionForce()
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,  getCollisionForce, getPosFromAgentState)
     integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState, getPosFromAgentState)
-    transit = TransitMultiAgentChasingForExp(reshapeAction, applyActionForce, applyEnvironForce, integrateState)
+    transit = TransitMultiAgentChasingForExp(reshapeAction, applyActionForce, applyEnvironForce, integrateState,checkAllAgents)
     # minDistanceForReborn
     # updateWorld = UpdateWorld(bounds,  minDistanceForReborn)
 
@@ -151,8 +156,8 @@ def main():
     checkEaten = CheckEaten(killzone, isAnyKilled)
     totalScore = 10
     attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
-    humanController = JoyStickForceControllers
-    humanController =lambda: list(np.random.uniform(-1,1,[2,5]))
+    humanController = JoyStickForceControllers()
+    # humanController =lambda: list(np.random.uniform(-1,1,[2,5]))
     # humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
     sheepRandomPolicy = lambda numSheep: np.random.uniform(-0.5,0.5,[numSheep,5])

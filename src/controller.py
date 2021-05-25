@@ -7,7 +7,7 @@ import os
 import collections as co
 class JoyStickForceControllers():
 
-    def __init__(self,joyStickIdList):
+    def __init__(self):
         pg.joystick.init()
         joyStickIdList = range(pg.joystick.get_count())
         self.joystickList = [pg.joystick.Joystick(joyStickId) for joyStickId in joyStickIdList ]
@@ -28,14 +28,15 @@ class JoyStickForceControllers():
                
                 
                     # print(axis)
-                actionList.append(action)
-            print(action)
+            actionList.append(action)
+            # print(action)
+            print(actionList)
 
         # joystickSpaceSize = len(self.joystickList) * numAxes
 
         # actionList = [0 if abs(actionList[i]) < 0.5 else actionList[i] for i in range(joystickSpaceSize)]
         # action = [actionList[i:i + 2] for i in range(0, len(actionList), numAxes)]
-        return  actionList
+        return actionList
 
 class JoyStickController():
 

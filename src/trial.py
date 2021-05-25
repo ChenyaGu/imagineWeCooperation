@@ -67,7 +67,7 @@ class NewtonChaseTrial():
             state = nextState
             eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions)
 
-            # pause = self.checkTerminationOfTrial(action, eatenFlag, currentStopwatch)
+            pause = self.checkTerminationOfTrial(eatenFlag, currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
 
@@ -157,7 +157,7 @@ class CheckEaten:
 
     def __call__(self, targetPositions, playerPositions):
         eatenFlag = [False] * len(targetPositions)
-        hunterFlag = [False] * len(targetPositions)
+        hunterFlag = [False] * len(playerPositions)
         for (i, targetPosition) in enumerate(targetPositions):
             if self.isAnyKilled(playerPositions, targetPosition, self.killzone):
                 eatenFlag[i] = True
@@ -173,12 +173,11 @@ class CheckTerminationOfTrial:
     def __init__(self, finishTime):
         self.finishTime = finishTime
 
-    def __call__(self, actionList, eatenFlag, currentStopwatch):
-        for action in actionList:
-            if np.any(eatenFlag) == True or action == pg.QUIT or currentStopwatch >= self.finishTime:
-                pause = False
-            else:
-                pause = True
+    def __call__(self, eatenFlag, currentStopwatch):
+        if np.any(eatenFlag) == True or currentStopwatch >= self.finishTime:
+            pause = False
+        else:
+            pause = True
         return pause
 
 

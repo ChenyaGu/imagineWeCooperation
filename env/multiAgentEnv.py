@@ -4,6 +4,30 @@ import numpy as np
 
 getPosFromAgentState = lambda state: np.array([state[0], state[1]])
 getVelFromAgentState = lambda agentState: np.array([agentState[2], agentState[3]])
+class StayInBoundaryByReflectVelocity():
+    def __init__(self, xBoundary, yBoundary):
+        self.xMin, self.xMax = xBoundary
+        self.yMin, self.yMax = yBoundary
+
+    def __call__(self, position, velocity):
+        adjustedX, adjustedY = position
+        adjustedVelX, adjustedVelY = velocity
+        if position[0] >= self.xMax:
+            adjustedX = 2 * self.xMax - position[0]
+            adjustedVelX = -velocity[0]
+        if position[0] <= self.xMin:
+            adjustedX = 2 * self.xMin - position[0]
+            adjustedVelX = -velocity[0]
+        if position[1] >= self.yMax:
+            adjustedY = 2 * self.yMax - position[1]
+            adjustedVelY = -velocity[1]
+        if position[1] <= self.yMin:
+            adjustedY = 2 * self.yMin - position[1]
+            adjustedVelY = -velocity[1]
+        checkedPosition = np.array([adjustedX, adjustedY])
+        checkedVelocity = np.array([adjustedVelX, adjustedVelY])
+        return checkedPosition, checkedVelocity
+
 
 class GetActionCost:
     def __init__(self, costActionRatio, reshapeAction, individualCost):
@@ -151,8 +175,8 @@ class ResetMultiAgentNewtonChasing:
             initSheepRandomPos[i] = sheepPos
         # agentsState = initAgentRandomPos + [list(initAgentZeroVel()) for ID in range(self.numPlayers)]
         # sheepState = initSheepRandomPos + [list(initSheepRandomVel()) for sheepID in range(numSheeps)]
-        agentsState =  [state + vel for state,vel in zip(initAgentRandomPos,[list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
-        sheepState =  [state + vel for state,vel in zip(initSheepRandomPos,[list(initSheepRandomVel()) for ID in range(numSheeps)])]
+        agentsState = [state + vel for state,vel in zip(initAgentRandomPos,[list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
+        sheepState = [state + vel for state,vel in zip(initSheepRandomPos,[list(initSheepRandomVel()) for ID in range(numSheeps)])]
         
 
         state = np.array(agentsState + sheepState)
@@ -219,6 +243,8 @@ class ApplyActionForce:
         self.actionDim = actionDim
 
     def __call__(self, pForce, actions):
+        self.numAgents = len(actions)
+        self.agentsID = list(range(self.numAgents))
         noise = [None] * self.numAgents
         for agentID in self.agentsID:
             movable = self.entitiesMovableList[agentID]
@@ -239,6 +265,7 @@ class ApplyEnvironForce:
 
     def __call__(self, pForce, state):
         self.numEntities = len(state)
+        print(len(state))
         for entity1ID in range(self.numEntities):
             for entity2ID in range(self.numEntities):
                 if entity2ID <= entity1ID: continue
@@ -303,13 +330,13 @@ class IntegrateState:
 
         return nextState
 class TransitMultiAgentChasingForExp:
-    def __init__(self, reshapeAction, applyActionForce, applyEnvironForce, integrateState):
+    def __init__(self, reshapeAction, applyActionForce, applyEnvironForce, integrateState,checkAllAgents):
         
         self.reshapeAction = reshapeAction
         self.applyActionForce = applyActionForce
         self.applyEnvironForce = applyEnvironForce
         self.integrateState = integrateState
-
+        self.checkAllAgents = checkAllAgents
     def __call__(self, state, actions):
         # print(state,actions)
         actions = [self.reshapeAction(action) for action in actions]
@@ -319,7 +346,7 @@ class TransitMultiAgentChasingForExp:
         p_force = self.applyActionForce(p_force, actions)
         p_force = self.applyEnvironForce(p_force, state)
         nextState = self.integrateState(p_force, state)
-
+        nextState = self.checkAllAgents(nextState)
         return nextState
 
 class TransitMultiAgentChasing:
@@ -331,6 +358,7 @@ class TransitMultiAgentChasing:
         self.integrateState = integrateState
 
     def __call__(self, state, actions):
+        self.numEntities = len(state)
         actions = [self.reshapeAction(action) for action in actions]
         p_force = [None] * self.numEntities
         p_force = self.applyActionForce(p_force, actions)
@@ -343,7 +371,7 @@ class TransitMultiAgentChasing:
 class ReshapeAction:
     def __init__(self):
         self.actionDim = 2
-        self.sensitivity = 5
+        self.sensitivity = 30
 
     def __call__(self, action): # action: tuple of dim (5,1)
         actionX = action[1] - action[2]
