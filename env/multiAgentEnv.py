@@ -26,7 +26,7 @@ class StayInBoundaryByReflectVelocity():
             adjustedVelY = -velocity[1]
         checkedPosition = np.array([adjustedX, adjustedY])
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])
-        return checkedPosition, checkedVelocity
+        return np.array(list(checkedPosition) + list(checkedVelocity))
 
 
 class GetActionCost:
