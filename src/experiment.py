@@ -1,12 +1,12 @@
 import numpy as np
 
 class NewtonExperiment():
-    def __init__(self, trial, writer, experimentValues, reset, updateWorld, drawImage, resultsPath):
+    def __init__(self, trial, writer, experimentValues, reset, drawImage, resultsPath):
         self.trial = trial
         self.writer = writer
         self.experimentValues = experimentValues
         self.reset = reset
-        self.updateWorld = updateWorld
+        # self.updateWorld = updateWorld
         self.drawImage = drawImage
         self.resultsPath = resultsPath
 
@@ -32,7 +32,7 @@ class NewtonExperiment():
 
             if currentStopwatch >= finishTime:
                 break
-            targetPositions = self.updateWorld(targetPositions, playerGrid, eatenFlag)
+            # targetPositions = self.updateWorld(targetPositions, playerGrid, eatenFlag)
             trialIndex += 1
         self.writer(blockResult,self.resultsPath)
         print(blockResult)
