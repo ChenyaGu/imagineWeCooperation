@@ -59,7 +59,7 @@ def main():
 
     stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity( [0, gridSize - 1], [0, gridSize - 1])
     def checkBoudary(agentState):
-        newState = stayInBoundaryByReflectVelocity(agentState[0:2],agentState[2:])
+        newState = stayInBoundaryByReflectVelocity(getPosFromAgentState(agentState),getVelFromAgentState(agentState))
         return newState
     checkAllAgents = lambda states: [checkBoudary(agentState) for agentState in states]
     reshapeAction = ReshapeAction()
