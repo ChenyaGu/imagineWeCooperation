@@ -19,11 +19,11 @@ class NewtonExperiment():
         blockResult=[]
         for conditon in trailCondtions:
             sheepNums = conditon['sheepNums']
-            print(sheepNums)
             initState = self.reset(sheepNums)
             currentStopwatch = 0
             timeStepforDraw = 0
-            print('trialIndex', trialIndex)
+            print('trial:', trialIndex+1)
+            print('Number of sheeps:', sheepNums)
             # response = self.experimentValues.copy()
             traj, finalState, score, currentStopwatch, eatenFlag, timeStepforDraw = self.trial(
                 initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums)

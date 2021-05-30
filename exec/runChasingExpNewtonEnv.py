@@ -4,6 +4,7 @@ sys.path.append(os.path.join(os.path.join(os.path.dirname(__file__), '..')))
 import collections as co
 import itertools as it
 import numpy as np
+import random
 import pygame as pg
 from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, DrawAttributionTrail
@@ -24,9 +25,8 @@ def main():
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
-
-
     AllConditions=parametersAllCondtion*trailNumEachCondition
+    random.shuffle(AllConditions)
 
     numWolves = 2
     numSheeps = max(manipulatedVariables['sheepNums'])
