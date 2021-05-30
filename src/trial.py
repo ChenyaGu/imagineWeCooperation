@@ -1,13 +1,11 @@
 import numpy as np
 import pygame as pg
-from pygame.color import THECOLORS
 from pygame import time
 import collections as co
 import pickle
 from src.visualization import DrawBackground, DrawNewState, DrawImage, drawText
 from src.controller import HumanController, ModelController
 from src.updateWorld import InitialWorld
-import random
 import os
 class NewtonChaseTrial():
     def __init__(self,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,sheepPolicy,transit):
@@ -23,7 +21,7 @@ class NewtonChaseTrial():
         self.getEntityPos = getEntityPos    
         self.sheepPolicy = sheepPolicy
         self.transit = transit
-    def __call__(self,initState, score, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
+    def __call__(self,initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
         initialTime = time.get_ticks()
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
@@ -32,9 +30,9 @@ class NewtonChaseTrial():
         # dequeState = deque(maxlen=self.memorySize)
         pause = True
         state = initState
-        remainningTime = 0
-        currentScore = [0,0]
+        currentScore = score
         newStopwatch = currentStopwatch
+
         while pause:
             pg.time.delay(32)
             # dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
@@ -44,7 +42,8 @@ class NewtonChaseTrial():
 
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            screen = self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
+            remainningTime = max(0, finishTime - newStopwatch)
+            self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
             pg.display.update()
 
             for event in pg.event.get():
@@ -53,6 +52,7 @@ class NewtonChaseTrial():
                     pg.quit()
                 elif event.type == self.stopwatchEvent:
                     newStopwatch = newStopwatch + self.stopwatchUnit
+            currentStopwatch = newStopwatch
             humanAction=self.humanController()
             # action1 = np.array(humanAction[0]) * self.wolfSpeedRatio
             # action2 = np.array(humanAction[1]) * self.wolfSpeedRatio
@@ -62,8 +62,6 @@ class NewtonChaseTrial():
             nextState = self.transit(state,action)
             # targetPositions=[self.stayInBoundary(np.add(targetPosition, singleAction))  for (targetPosition,singleAction)  in zip(targetPositions,sheepAction)]
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
-
-            # remainningTime = max(0, self.finishTime - newStopwatch)
             state = nextState
             eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions)
 
@@ -89,7 +87,7 @@ class NewtonChaseTrial():
         # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
         score = np.add(score, addSocre)
-        return results,nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
+        return results, nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
 
 class AttributionTrail:
     def __init__(self, totalScore, saveImageDir, saveImage, drawAttributionTrail):
@@ -356,47 +354,3 @@ class ChaseTrial():
         results["trialTime"] = wholeResponseTime
         score = np.add(score, addSocre)
         return results, targetPositions, playerPositions, score, currentStopwatch, eatenFlag, timeStepforDraw
-
-
-def main():
-    dimension = 21
-    bounds = [0, 0, dimension - 1, dimension - 1]
-    minDistanceBetweenGrids = 5
-    condition = [-5, -3, -1, 0, 1, 3, 5]
-    initialWorld = InitialWorld(bounds)
-    pg.init()
-    screenWidth = 720
-    screenHeight = 720
-    screen = pg.display.set_mode((screenWidth, screenHeight))
-    gridSize = 21
-    leaveEdgeSpace = 2
-    lineWidth = 1
-    backgroundColor = [205, 255, 204]
-    lineColor = [0, 0, 0]
-    targetColor = [255, 50, 50]
-    playerColor = [50, 50, 255]
-    targetRadius = 10
-    playerRadius = 10
-    stopwatchUnit = 10
-    textColorTuple = (255, 50, 50)
-    stopwatchEvent = pg.USEREVENT + 1
-    pg.time.set_timer(stopwatchEvent, stopwatchUnit)
-    pg.event.set_allowed([pg.KEYDOWN, pg.QUIT, stopwatchEvent])
-    finishTime = 90000
-    currentStopwatch = 32888
-    score = 0
-    drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, lineColor, lineWidth, textColorTuple)
-    drawNewState = DrawNewState(screen, drawBackground, targetColor, playerColor, targetRadius, playerRadius)
-    humanController = HumanController(gridSize, stopwatchEvent, stopwatchUnit, drawNewState, finishTime)
-    policy = pickle.load(open("SingleWolfTwoSheepsGrid15.pkl", "rb"))
-    modelController = ModelController(policy, gridSize, stopwatchEvent, stopwatchUnit, drawNewState, finishTime)
-    trial = Trial(modelController, drawNewState, stopwatchEvent, finishTime)
-    bean1Grid, bean2Grid, playerGrid = initialWorld(minDistanceBetweenGrids)
-    bean1Grid = (3, 13)
-    bean2Grid = (5, 0)
-    playerGrid = (0, 8)
-    results = trial(bean1Grid, bean2Grid, playerGrid, score, currentStopwatch)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,17 +1,13 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.join(os.path.dirname(__file__), '..')))
-import pandas as pd
 import collections as co
 import itertools as it
 import numpy as np
-import random
-
 import pygame as pg
 from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, DrawAttributionTrail
 from src.controller import HumanController, ModelController,JoyStickForceControllers
-from src.updateWorld import  UpdateWorld, StayInBoundary
 from src.writer import WriteDataFrameToCSV,saveToPickle
 from src.trial import NewtonChaseTrial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
 from src.experiment import NewtonExperiment
@@ -23,8 +19,8 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums']=[1,2,4]
-    trailNumEachCondition = 6
+    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    trailNumEachCondition = 8
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -49,10 +45,8 @@ def main():
     entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
     wolfMaxSpeed = 1000
+    sheepMaxSpeed = 1000
     blockMaxSpeed = None
-    sheepMaxSpeedOriginal = 1000
-    # sheepMaxSpeed = sheepMaxSpeedOriginal * sheepSpeedMultiplier
-    sheepMaxSpeed = sheepMaxSpeedOriginal
 
     entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
     entitiesMovableList = [True] * numAgents + [False] * numBlocks
@@ -67,16 +61,13 @@ def main():
     def checkBoudary(agentState):
         newState = stayInBoundaryByReflectVelocity(agentState[0:2],agentState[2:])
         return newState
-    checkAllAgents = lambda states:[checkBoudary(agentState) for agentState in states]
+    checkAllAgents = lambda states: [checkBoudary(agentState) for agentState in states]
     reshapeAction = ReshapeAction()
     getCollisionForce = GetCollisionForce()
     applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
     applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList,  getCollisionForce, getPosFromAgentState)
     integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState, getPosFromAgentState)
     transit = TransitMultiAgentChasingForExp(reshapeAction, applyActionForce, applyEnvironForce, integrateState,checkAllAgents)
-    # minDistanceForReborn
-    # updateWorld = UpdateWorld(bounds,  minDistanceForReborn)
-
 
     screenWidth = 800
     screenHeight = 800
@@ -96,10 +87,8 @@ def main():
     totalBarLength = 100
     barHeight = 20
     stopwatchUnit = 100
-    # finishTime = 1000 * 60 * 2
     finishTime = 1000 * 15
     block = 1
-    softmaxBeita = -1
     textColorTuple = THECOLORS['green']
     stopwatchEvent = pg.USEREVENT + 1
 
@@ -135,9 +124,6 @@ def main():
     drawAttributionTrail = DrawAttributionTrail(screen, playerColors, totalBarLength, barHeight, screenCenter)
     saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'), experimentValues["name"])
 
-    xBoundary = [bounds[0], bounds[2]]
-    yBoundary = [bounds[1], bounds[3]]
-    stayInBoundary = StayInBoundary(xBoundary, yBoundary)
 
 ############
     # actionSpace = [(10, 0), (7, 7), (0, 10), (-7, 7), (-10, 0), (-7, -7), (0, -10), (7, -7), (0, 0)]
@@ -160,14 +146,13 @@ def main():
     # humanController =lambda: list(np.random.uniform(-1,1,[2,5]))
     # humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
-    sheepRandomPolicy = lambda numSheep: np.random.uniform(-0.5,0.5,[numSheep,5])
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     # actionSpace = list(it.product([0, 1, -1], repeat=2))
     trial = NewtonChaseTrial(numPlayers, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,sheepPolicy,transit)
     experiment = NewtonExperiment(trial, writer, experimentValues, reset, drawImage, writerPath)
     giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
 
-    # drawImage(introductionImage)
+    drawImage(introductionImage)
     score = [0] * block
 
     for i in range(block):

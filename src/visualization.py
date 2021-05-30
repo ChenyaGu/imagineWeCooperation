@@ -71,10 +71,10 @@ class DrawBackground():
         pg.draw.rect(self.screen, self.backgroundColor, pg.Rect(np.int(self.leaveEdgeSpace * self.widthLineStepSpace), np.int(self.leaveEdgeSpace * self.heightLineStepSpace), np.int(self.gridSize * self.widthLineStepSpace), np.int(self.gridSize * self.heightLineStepSpace)))
 
         seconds = currentTime / 1000
-        # drawText(self.screen, 'Time: ' + str("%4.1f" % seconds) + 's', THECOLORS['white'], (self.widthLineStepSpace * 5, self.leaveEdgeSpace * 3))
+        drawText(self.screen, 'Time: ' + str("%4.1f" % seconds) + 's', THECOLORS['white'], (self.widthLineStepSpace * 5, self.leaveEdgeSpace * 3))
         # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
         # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
-        drawText(self.screen, 'TotalScore: ' + str(currentScore[0]+currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 35, self.leaveEdgeSpace * 3))
+        drawText(self.screen, 'TotalScore: ' + str(currentScore[0]+currentScore[1]), self.textColorTuple, (self.widthLineStepSpace * 40, self.leaveEdgeSpace * 3))
         return
 
 

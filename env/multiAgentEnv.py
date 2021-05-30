@@ -1,9 +1,10 @@
 
-  
 import numpy as np
 
 getPosFromAgentState = lambda state: np.array([state[0], state[1]])
 getVelFromAgentState = lambda agentState: np.array([agentState[2], agentState[3]])
+
+
 class StayInBoundaryByReflectVelocity():
     def __init__(self, xBoundary, yBoundary):
         self.xMin, self.xMax = xBoundary
@@ -26,7 +27,7 @@ class StayInBoundaryByReflectVelocity():
             adjustedVelY = -velocity[1]
         checkedPosition = np.array([adjustedX, adjustedY])
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])
-        return checkedPosition, checkedVelocity
+        return np.array(list(checkedPosition) + list(checkedVelocity))
 
 
 class GetActionCost:
@@ -38,7 +39,7 @@ class GetActionCost:
     def __call__(self, agentsActions):
         agentsActions = [self.reshapeAction(action) for action in agentsActions]
         actionMagnitude = [np.linalg.norm(np.array(action), ord=2) for action in agentsActions]
-        cost = self.costActionRatio* np.array(actionMagnitude)
+        cost = self.costActionRatio * np.array(actionMagnitude)
         numAgents = len(agentsActions)
         groupCost = cost if self.individualCost else [np.sum(cost)] * numAgents
 
@@ -63,14 +64,15 @@ class RewardWolf:
         self.entitiesSizeList = entitiesSizeList
         self.isCollision = isCollision
         self.collisionReward = collisionReward
-        self.individual = float(individual) # self.individual = 0.8: 0.8* reward give myself, 0.2* reward split to other agents
+        self.individual = float(
+            individual)  # self.individual = 0.8: 0.8* reward give myself, 0.2* reward split to other agents
 
     def __call__(self, state, action, nextState):
         numWolves = len(self.wolvesID)
-        reward = [0]* numWolves
+        reward = [0] * numWolves
 
-        individualReward = self.individual* self.collisionReward
-        sharedRewardForEachAgent = (1-self.individual)* self.collisionReward/ numWolves
+        individualReward = self.individual * self.collisionReward
+        sharedRewardForEachAgent = (1 - self.individual) * self.collisionReward / numWolves
 
         for rewardID, wolfID in enumerate(self.wolvesID):
             wolfSize = self.entitiesSizeList[wolfID]
@@ -85,6 +87,7 @@ class RewardWolf:
                     reward[rewardID] += individualReward
 
         return reward
+
 
 class PunishForOutOfBound:
     def __init__(self):
@@ -116,7 +119,7 @@ class RewardSheep:
         self.collisionPunishment = collisionPunishment
         self.punishForOutOfBound = punishForOutOfBound
 
-    def __call__(self, state, action, nextState): #state, action not used
+    def __call__(self, state, action, nextState):  # state, action not used
         reward = []
         for sheepID in self.sheepsID:
             sheepReward = 0
@@ -134,10 +137,14 @@ class RewardSheep:
         return reward
 
 
-def samplePosition(gridSize,positionDimension):
+def samplePosition(gridSize, positionDimension):
     randomPos = lambda: np.random.uniform(0, gridSize - 1, positionDimension)
     position = list(randomPos())
+    for i in range(positionDimension):
+        position[i] = round(position[i], 2)
     return position
+
+
 class ResetMultiAgentChasing:
     def __init__(self, numTotalAgents, numBlocks):
         self.positionDimension = 2
@@ -156,12 +163,14 @@ class ResetMultiAgentChasing:
         state = np.array(agentsState + blocksState)
         return state
 
+
 class ResetMultiAgentNewtonChasing:
     def __init__(self, gridSize, numPlayers, minDistance):
         self.positionDimension = 2
         self.gridSize = gridSize
         self.numPlayers = numPlayers
         self.minDistance = minDistance
+
     def __call__(self, numSheeps):
         initAgentRandomPos = [samplePosition(self.gridSize, self.positionDimension) for ID in range(self.numPlayers)]
         initAgentZeroVel = lambda: np.zeros(self.positionDimension)
@@ -173,14 +182,12 @@ class ResetMultiAgentNewtonChasing:
                                    initAgentRandomPos]) < self.minDistance):
                 sheepPos = samplePosition(self.gridSize, self.positionDimension)
             initSheepRandomPos[i] = sheepPos
-        # agentsState = initAgentRandomPos + [list(initAgentZeroVel()) for ID in range(self.numPlayers)]
-        # sheepState = initSheepRandomPos + [list(initSheepRandomVel()) for sheepID in range(numSheeps)]
-        agentsState = [state + vel for state,vel in zip(initAgentRandomPos,[list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
-        sheepState = [state + vel for state,vel in zip(initSheepRandomPos,[list(initSheepRandomVel()) for ID in range(numSheeps)])]
-        
+        agentsState = [state + vel for state, vel in
+                       zip(initAgentRandomPos, [list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
+        sheepState = [state + vel for state, vel in
+                      zip(initSheepRandomPos, [list(initSheepRandomVel()) for ID in range(numSheeps)])]
 
         state = np.array(agentsState + sheepState)
-        # print(state,'23')
         return state
 
 
@@ -217,7 +224,7 @@ class Observe:
 
 
 class GetCollisionForce:
-    def __init__(self, contactMargin = 0.001, contactForce = 100):
+    def __init__(self, contactMargin=0.001, contactForce=100):
         self.contactMargin = contactMargin
         self.contactForce = contactForce
 
@@ -228,7 +235,7 @@ class GetCollisionForce:
         minDist = obj1Size + obj2Size
         penetration = np.logaddexp(0, -(dist - minDist) / self.contactMargin) * self.contactMargin
 
-        force = self.contactForce* posDiff / dist * penetration
+        force = self.contactForce * posDiff / dist * penetration
         force1 = +force if obj1Movable else None
         force2 = -force if obj2Movable else None
 
@@ -290,7 +297,8 @@ class ApplyEnvironForce:
 
 
 class IntegrateState:
-    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState, getPosFromAgentState, damping=0.25, dt=0.1):
+    def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState,
+                 getPosFromAgentState, damping=0.25, dt=0.1):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping
@@ -321,7 +329,7 @@ class IntegrateState:
 
             entityMaxSpeed = self.entityMaxSpeedList[entityID]
             if entityMaxSpeed is not None:
-                speed = np.sqrt(np.square(entityNextVel[0]) + np.square(entityNextVel[1])) #
+                speed = np.sqrt(np.square(entityNextVel[0]) + np.square(entityNextVel[1]))  #
                 if speed > entityMaxSpeed:
                     entityNextVel = entityNextVel / speed * entityMaxSpeed
 
@@ -329,14 +337,16 @@ class IntegrateState:
             nextState.append(getNextState(entityNextPos, entityNextVel))
 
         return nextState
+
+
 class TransitMultiAgentChasingForExp:
-    def __init__(self, reshapeAction, applyActionForce, applyEnvironForce, integrateState,checkAllAgents):
-        
+    def __init__(self, reshapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents):
         self.reshapeAction = reshapeAction
         self.applyActionForce = applyActionForce
         self.applyEnvironForce = applyEnvironForce
         self.integrateState = integrateState
         self.checkAllAgents = checkAllAgents
+
     def __call__(self, state, actions):
         # print(state,actions)
         actions = [self.reshapeAction(action) for action in actions]
@@ -348,6 +358,7 @@ class TransitMultiAgentChasingForExp:
         nextState = self.integrateState(p_force, state)
         nextState = self.checkAllAgents(nextState)
         return nextState
+
 
 class TransitMultiAgentChasing:
     def __init__(self, numEntities, reshapeAction, applyActionForce, applyEnvironForce, integrateState):
@@ -373,9 +384,8 @@ class ReshapeAction:
         self.actionDim = 2
         self.sensitivity = 30
 
-    def __call__(self, action): # action: tuple of dim (5,1)
+    def __call__(self, action):  # action: tuple of dim (5,1)
         actionX = action[1] - action[2]
         actionY = action[3] - action[4]
         actionReshaped = np.array([actionX, actionY]) * self.sensitivity
         return actionReshaped
-

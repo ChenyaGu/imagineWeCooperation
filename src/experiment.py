@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class NewtonExperiment():
     def __init__(self, trial, writer, experimentValues, reset, drawImage, resultsPath):
         self.trial = trial
@@ -15,7 +16,6 @@ class NewtonExperiment():
         trialIndex = 0
         score = np.array([0, 0])
 
-        trialNum = 4
         blockResult=[]
         for conditon in trailCondtions:
             sheepNums = conditon['sheepNums']
@@ -26,7 +26,7 @@ class NewtonExperiment():
             print('trialIndex', trialIndex)
             # response = self.experimentValues.copy()
             traj, finalState, score, currentStopwatch, eatenFlag, timeStepforDraw = self.trial(
-                initState, score, currentStopwatch, trialIndex, timeStepforDraw, sheepNums)
+                initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums)
             # response.update(results)
 
             blockResult.append({'sheepNums': sheepNums, 'score': score, 'traj': traj })
