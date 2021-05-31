@@ -31,8 +31,8 @@ class NewtonExperiment():
 
             blockResult.append({'sheepNums': sheepNums, 'score': score, 'traj': traj })
 
-            if currentStopwatch >= finishTime:
-                break
+            # if currentStopwatch >= finishTime:
+            #     break
             # targetPositions = self.updateWorld(targetPositions, playerGrid, eatenFlag)
             trialIndex += 1
         self.writer(blockResult,self.resultsPath)
