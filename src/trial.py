@@ -13,7 +13,7 @@ class NewtonChaseTrial():
         self.humanController = humanController
         self.drawNewState = drawNewState
         self.stopwatchEvent = stopwatchEvent
-        self.beanReward = 1
+        self.beanReward = 0.5
         self.checkEaten = checkEaten
         self.checkTerminationOfTrial = checkTerminationOfTrial
         # self.memorySize = 25
@@ -32,7 +32,7 @@ class NewtonChaseTrial():
         state = initState
         currentScore = score
         newStopwatch = currentStopwatch
-
+        stateList=[]
         while pause:
             pg.time.delay(32)
             # dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
@@ -63,8 +63,8 @@ class NewtonChaseTrial():
             # targetPositions=[self.stayInBoundary(np.add(targetPosition, singleAction))  for (targetPosition,singleAction)  in zip(targetPositions,sheepAction)]
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
             state = nextState
+            stateList.append(nextState)
             eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions)
-
             pause = self.checkTerminationOfTrial(eatenFlag, currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
@@ -74,19 +74,21 @@ class NewtonChaseTrial():
         addSocre = [0, 0]
         if True in eatenFlag[:2]:
             # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
-            results["beanEaten"] = eatenFlag.index(True) + 1
+            results["sheepIndex"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addSocre[hunterId] = self.beanReward*remainningTime/1000
         elif True in eatenFlag:
-            results["beanEaten"] = eatenFlag.index(True) + 1
+            results["sheepIndex"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addSocre[hunterId] = self.beanReward*remainningTime/1000
 
         else:
-            results["beanEaten"] = 0
+            results["sheepIndex"] = 0
         # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
+        results["trajectory"] = str(stateList)
         score = np.add(score, addSocre)
+        print(score)
         return results, nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
 
 class AttributionTrail:
