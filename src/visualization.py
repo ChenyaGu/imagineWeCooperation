@@ -56,16 +56,13 @@ class GiveExperimentFeedback():
 
 
 class DrawBackground():
-    def __init__(self, screen, gridSize, leaveEdgeSpace, backgroundColor, lineColor, lineWidth, textColorTuple,
-                 playerColors):
+    def __init__(self, screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors):
         self.screen = screen
         self.gridSize = gridSize
         self.leaveEdgeSpace = leaveEdgeSpace
         self.widthLineStepSpace = np.int(screen.get_width() / (gridSize + 2 * self.leaveEdgeSpace))
         self.heightLineStepSpace = np.int(screen.get_height() / (gridSize + 2 * self.leaveEdgeSpace))
         self.backgroundColor = backgroundColor
-        self.lineColor = lineColor
-        self.lineWidth = lineWidth
         self.textColorTuple = textColorTuple
         self.playerColors = playerColors
 
@@ -167,8 +164,8 @@ class DrawAttributionTrail:
         attributorRect = ((self.screenCenter[0] - self.totalBarLength / 2, self.screenCenter[1] - self.barHeight / 2),
                           (attributorLen, self.barHeight))
         recipentRect = (
-        (self.screenCenter[0] - self.totalBarLength / 2 + attributorLen, self.screenCenter[1] - self.barHeight / 2),
-        (self.totalBarLength - attributorLen, self.barHeight))
+            (self.screenCenter[0] - self.totalBarLength / 2 + attributorLen, self.screenCenter[1] - self.barHeight / 2),
+            (self.totalBarLength - attributorLen, self.barHeight))
 
         pg.draw.rect(self.screen, self.playerColors[attributorId], attributorRect)
         pg.draw.rect(self.screen, self.playerColors[recipentId], recipentRect)

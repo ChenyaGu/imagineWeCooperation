@@ -29,8 +29,6 @@ class JoyStickForceControllers():
                 
                     # print(axis)
             actionList.append(action)
-            # print(action)
-            print(actionList)
 
         # joystickSpaceSize = len(self.joystickList) * numAxes
 

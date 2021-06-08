@@ -8,7 +8,6 @@ class NewtonExperiment():
         self.writer = writer
         self.experimentValues = experimentValues
         self.reset = reset
-        # self.updateWorld = updateWorld
         self.drawImage = drawImage
 
     def __call__(self, finishTime, trailCondtions):
@@ -16,7 +15,6 @@ class NewtonExperiment():
         trialIndex = 0
         score = np.array([0, 0])
 
-        # blockResult=[]
         for conditon in trailCondtions:
             sheepNums = conditon['sheepNums']
             initState = self.reset(sheepNums)
@@ -26,20 +24,13 @@ class NewtonExperiment():
             print('Number of sheeps:', sheepNums)
             result, finalState, score, currentStopwatch, eatenFlag, timeStepforDraw = self.trial(
                 initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums)
-            result["sheepNums"]=sheepNums
-            result["score"]=str(score)
+            result["sheepNums"] = sheepNums
+            result["score"] = str(score)
             response = self.experimentValues.copy()
             response.update(result)
-
-            # blockResult.append({'sheepNums': sheepNums, 'score': score, 'trialTime': result["trialTime"], 'traj': result["trajectory"]})
-
-            # if currentStopwatch >= finishTime:
-            #     break
-            # targetPositions = self.updateWorld(targetPositions, playerGrid, eatenFlag)
             trialIndex += 1
-            responseDF = pd.DataFrame(response, index=[trialIndex])
-            self.writer(responseDF)
-        print(result)
+            self.writer(response, trialIndex)
+            print(result)
         # return result
 
 class Experiment():
@@ -77,7 +68,6 @@ class Experiment():
             targetPositions = self.updateWorld(targetPositions, playerGrid, eatenFlag)
             trialIndex += 1
         self.writer(blockResult,self.resultsPath)
-        print(blockResult)
         return blockResult
 
 

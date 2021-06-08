@@ -8,7 +8,7 @@ from src.controller import HumanController, ModelController
 from src.updateWorld import InitialWorld
 import os
 class NewtonChaseTrial():
-    def __init__(self,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,sheepPolicy,transit):
+    def __init__(self,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,getEntityVel,sheepPolicy,transit):
         self.numOfWolves = numOfWolves
         self.humanController = humanController
         self.drawNewState = drawNewState
@@ -19,13 +19,14 @@ class NewtonChaseTrial():
         # self.memorySize = 25
         self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos    
+        self.getEntityVel = getEntityVel
         self.sheepPolicy = sheepPolicy
         self.transit = transit
     def __call__(self,initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
         initialTime = time.get_ticks()
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
-        getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves,self.numOfWolves + sheepNums)]
+        getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves, self.numOfWolves + sheepNums)]
         # from collections import deque
         # dequeState = deque(maxlen=self.memorySize)
         pause = True
@@ -70,25 +71,54 @@ class NewtonChaseTrial():
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
 
         results = co.OrderedDict()
+        # results["firstResponseTime"] = firstResponseTime
+        results["trialTime"] = wholeResponseTime
+        wolf1Traj=[]
+        wolf1Vel=[]
+        wolf2Traj=[]
+        wolf2Vel=[]
+        sheepTraj=[]
+        sheepVel=[]
+        for i in range(len(stateList)):
+            allAgentTraj = stateList[i]
+            wolf1Traj.append(self.getEntityPos(allAgentTraj, 0))
+            wolf1Vel.append(self.getEntityVel(allAgentTraj, 0))
+            wolf2Traj.append(self.getEntityPos(allAgentTraj, 1))
+            wolf2Vel.append(self.getEntityVel(allAgentTraj, 1))
+            for j in range(sheepNums):
+                sheepTraj.append(self.getEntityPos(allAgentTraj, j+2))
+                sheepVel.append(self.getEntityVel(allAgentTraj, j+2))
 
+        roundFunc = lambda x: round(x,2)
+        wolf1Traj = [list(map(roundFunc,i)) for i in wolf1Traj]
+        wolf2Traj = [list(map(roundFunc,i)) for i in wolf2Traj]
+        sheepTraj = [list(map(roundFunc,i)) for i in sheepTraj]
+        wolf1Vel = [list(map(roundFunc,i)) for i in wolf1Vel]
+        wolf2Vel = [list(map(roundFunc,i)) for i in wolf2Vel]
+        sheepVel = [list(map(roundFunc,i)) for i in sheepVel]
+
+        results["player1 traj"] = str(wolf1Traj)
+        results["player2 traj"] = str(wolf2Traj)
+        results["sheeps traj"] = str(sheepTraj)
+        results["player1 vel"] = str(wolf1Vel)
+        results["player2 vel"] = str(wolf2Vel)
+        results["sheeps vel"] = str(sheepVel)
         addSocre = [0, 0]
         if True in eatenFlag[:2]:
             # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
-            results["sheepIndex"] = eatenFlag.index(True) + 1
+            results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward*remainningTime/1000
+            addSocre[hunterId] = self.beanReward * remainningTime / 1000
         elif True in eatenFlag:
-            results["sheepIndex"] = eatenFlag.index(True) + 1
+            results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward*remainningTime/1000
+            addSocre[hunterId] = self.beanReward * remainningTime / 1000
 
         else:
-            results["sheepIndex"] = 0
-        # results["firstResponseTime"] = firstResponseTime
-        results["trialTime"] = wholeResponseTime
-        results["trajectory"] = str(stateList)
+            results["sheepEaten"] = 0
         score = np.add(score, addSocre)
-        print(score)
+        totalScore = score[0] + score[1]
+        print(totalScore)
         return results, nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
 
 class AttributionTrail:
