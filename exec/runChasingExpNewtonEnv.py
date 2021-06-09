@@ -14,8 +14,10 @@ from src.controller import HumanController, ModelController, JoyStickForceContro
 from src.writer import WriteDataFrameToCSV
 from src.trial import NewtonChaseTrial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
 from src.experiment import NewtonExperiment
-from src.sheepPolicy import BuildMADDPGModels, ActOneStep, actByPolicyTrainNoisy, RandomNewtonMovePolicy, \
-    chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
+from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
+from src.functionTools.loadSaveModel import saveToPickle, restoreVariables,GetSavePath
+# from src.sheepPolicy import BuildMADDPGModels, ActOneStep, actByPolicyTrainNoisy, RandomNewtonMovePolicy, \
+    # chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, ResetMultiAgentNewtonChasing, \
     TransitMultiAgentChasingForExp, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
     IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe
@@ -27,7 +29,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1]
+    manipulatedVariables['sheepNums'] = [2]
     trailNumEachCondition = 3
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -93,7 +95,7 @@ def main():
 
     # --------environment setting-----------
     numWolves = 2
-    numSheeps = max(manipulatedVariables['sheepNums'])
+    numSheeps = 2
     numBlocks = 0
 
     numAgents = numWolves + numSheeps
@@ -134,7 +136,7 @@ def main():
 
     # -----------observe--------
     observeOneAgent = lambda agentID: Observe(agentID, wolvesID, sheepsID, [], getPosFromAgentState, getVelFromAgentState)
-    observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numSheeps)]
+    observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numAgents)]
 
     initObsForParams = observe(reset(numSheeps))
     obsShape = [initObsForParams[obsID].shape[0] for obsID in range(len(initObsForParams))]
@@ -144,17 +146,19 @@ def main():
     layerWidth = [128, 128]
 
     # -----------model--------
-    modelSaveName = '2w1s'
+    modelSaveName = '2w2s'
     maxEpisode = 60000
     evaluateEpisode = 60000
     maxTimeStep = 75
-    buildMADDPGModels = BuildMADDPGModels(actionDim, numSheeps, obsShape)
-    modelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numSheeps)]
+    buildMADDPGModels = BuildMADDPGModels(actionDim, numAgents, obsShape)
+    # [print(agentID) for agentID in range(numAgents)]
+    # buildMADDPGModels(layerWidth, 1)
+    modelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves,numAgents)]
 
     mainModelFolder = os.path.join(dirName, '..', 'model','faneNewton')
     modelFolder = os.path.join(mainModelFolder, modelSaveName)
-    fileName = "maddpg2wolves1sheep0blocks{}episodes{}stepSheepSpeed1WolfActCost0individ0_agent".format(maxEpisode, maxTimeStep)
-    modelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numAgents)]
+    fileName = "maddpg2wolves2sheep0blocks{}episodes{}stepSheepSpeed1WolfActCost0individ0_agent".format(maxEpisode, maxTimeStep)
+    modelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves,numAgents)]
 
     [restoreVariables(model, path) for model, path in zip(modelsList, modelPaths)]
 
