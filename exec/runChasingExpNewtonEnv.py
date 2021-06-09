@@ -28,7 +28,7 @@ def main():
 
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1]
-    trailNumEachCondition = 5
+    trailNumEachCondition = 3
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -58,7 +58,7 @@ def main():
     totalBarLength = 100
     barHeight = 20
     stopwatchUnit = 100
-    finishTime = 1000 * 15
+    finishTime = 1000 * 16
     stopwatchEvent = pg.USEREVENT + 1
 
     saveImage = False
@@ -132,36 +132,36 @@ def main():
     transit = TransitMultiAgentChasingForExp(reshapeAction, applyActionForce, applyEnvironForce, integrateState,
                                              checkAllAgents)
 
-    # # -----------observe--------
-    # observeOneAgent = lambda agentID: Observe(agentID, wolvesID, sheepsID, [], getPosFromAgentState, getVelFromAgentState)
-    # observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numWolves)]
-    #
-    # initObsForParams = observe(reset())
-    # obsShape = [initObsForParams[obsID].shape[0] for obsID in range(len(initObsForParams))]
-    # worldDim = 2
-    # actionDim = worldDim * 2 + 1
-    #
-    # layerWidth = [128, 128]
-    #
-    # # -----------model--------
-    # modelSaveName = '2w1s'
-    # maxEpisode = 60000
-    # evaluateEpisode = 60000
-    # maxTimeStep = 75
-    # buildMADDPGModels = BuildMADDPGModels(actionDim, numWolves, obsShape)
-    # modelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves)]
-    #
-    # mainModelFolder = os.path.join(dirName, '..', 'model','faneNewton')
-    # modelFolder = os.path.join(mainModelFolder, modelSaveName)
-    # fileName = "maddpg2wolves1sheep0blocks{}episodes{}stepSheepSpeed1WolfActCost0individ0_agent".format(maxEpisode, maxTimeStep)
-    # modelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves)]
-    #
-    # [restoreVariables(model, path) for model, path in zip(modelsList, modelPaths)]
-    #
-    # actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
-    #
-    # sheepPolicy = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in modelsList]
-    sheepPolicy = RandomNewtonMovePolicy(numWolves)
+    # -----------observe--------
+    observeOneAgent = lambda agentID: Observe(agentID, wolvesID, sheepsID, [], getPosFromAgentState, getVelFromAgentState)
+    observe = lambda state: [observeOneAgent(agentID)(state) for agentID in range(numSheeps)]
+
+    initObsForParams = observe(reset(numSheeps))
+    obsShape = [initObsForParams[obsID].shape[0] for obsID in range(len(initObsForParams))]
+    worldDim = 2
+    actionDim = worldDim * 2 + 1
+
+    layerWidth = [128, 128]
+
+    # -----------model--------
+    modelSaveName = '2w1s'
+    maxEpisode = 60000
+    evaluateEpisode = 60000
+    maxTimeStep = 75
+    buildMADDPGModels = BuildMADDPGModels(actionDim, numSheeps, obsShape)
+    modelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numSheeps)]
+
+    mainModelFolder = os.path.join(dirName, '..', 'model','faneNewton')
+    modelFolder = os.path.join(mainModelFolder, modelSaveName)
+    fileName = "maddpg2wolves1sheep0blocks{}episodes{}stepSheepSpeed1WolfActCost0individ0_agent".format(maxEpisode, maxTimeStep)
+    modelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numAgents)]
+
+    [restoreVariables(model, path) for model, path in zip(modelsList, modelPaths)]
+
+    actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
+
+    sheepPolicy = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in modelsList]
+    # sheepPolicy = RandomNewtonMovePolicy(numWolves)
 
 
     checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)

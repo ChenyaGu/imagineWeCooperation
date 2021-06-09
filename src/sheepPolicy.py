@@ -1,14 +1,12 @@
 # from src.neuralNetwork.policyValueNet import GenerateModel, restoreVariables, ApproximatePolicy
 
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
-# import tensorflow.contrib.layers as layers
+import tensorflow as tf
+import tensorflow.contrib.layers as layers
 import model.tf_util as U
 import numpy as np
 import scipy.stats as stats
 import random
 import os
-
 
 class ActOneStep:
     def __init__(self, actByTrainNoisy):

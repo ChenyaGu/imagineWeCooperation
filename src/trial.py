@@ -23,7 +23,6 @@ class NewtonChaseTrial():
         self.sheepPolicy = sheepPolicy
         self.transit = transit
     def __call__(self,initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums):
-        initialTime = time.get_ticks()
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
         getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves, self.numOfWolves + sheepNums)]
@@ -34,19 +33,24 @@ class NewtonChaseTrial():
         currentScore = score
         newStopwatch = currentStopwatch
         stateList=[]
+        initTargetPositions = getTargetPos(initState)
+        initPlayerPositions = getPlayerPos(initState)
+        initDisplayTime = 15 * 1000
+        self.drawNewState(initTargetPositions, initPlayerPositions, initDisplayTime, currentScore)
+        pg.display.update()
+        pg.time.wait(1000)
+        initialTime = time.get_ticks()
         while pause:
             pg.time.delay(32)
             # dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
             # targetPositions, playerPositions, action, currentStopwatch, screen, timeStepforDraw = self.humanController(
             #     targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw, dequeState,
             #     sheepNums)
-
+            remainningTime = max(0, finishTime - newStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            remainningTime = max(0, finishTime - newStopwatch)
             self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
             pg.display.update()
-
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pause = True
@@ -108,11 +112,11 @@ class NewtonChaseTrial():
             # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addSocre[hunterId] = self.beanReward * (initDisplayTime - min(wholeResponseTime, initDisplayTime)) / 1000
         elif True in eatenFlag:
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addSocre[hunterId] = self.beanReward * (initDisplayTime - min(wholeResponseTime, initDisplayTime)) / 1000
 
         else:
             results["sheepEaten"] = 0
