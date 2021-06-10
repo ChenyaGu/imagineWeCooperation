@@ -16,8 +16,7 @@ from src.trial import NewtonChaseTrial, AttributionTrail, isAnyKilled, CheckEate
 from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables,GetSavePath
-# from src.sheepPolicy import BuildMADDPGModels, ActOneStep, actByPolicyTrainNoisy, RandomNewtonMovePolicy, \
-    # chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
+# from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, ResetMultiAgentNewtonChasing, \
     TransitMultiAgentChasingForExp, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
     IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe
@@ -146,6 +145,7 @@ def main():
     layerWidth = [128, 128]
 
     # -----------model--------
+    modelFolderName = 'fakeNewtonPolicy'
     modelSaveName = '2w2s'
     maxEpisode = 60000
     evaluateEpisode = 60000
@@ -153,18 +153,21 @@ def main():
     buildMADDPGModels = BuildMADDPGModels(actionDim, numAgents, obsShape)
     # [print(agentID) for agentID in range(numAgents)]
     # buildMADDPGModels(layerWidth, 1)
-    modelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves,numAgents)]
+    sheepModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves,numAgents)]
+    wolfModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves)]
 
-    mainModelFolder = os.path.join(dirName, '..', 'model','faneNewton')
+    mainModelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
     modelFolder = os.path.join(mainModelFolder, modelSaveName)
-    fileName = "maddpg2wolves2sheep0blocks{}episodes{}stepSheepSpeed1WolfActCost0individ0_agent".format(maxEpisode, maxTimeStep)
-    modelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves,numAgents)]
+    fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}individ0_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep)
+    sheepModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves,numAgents)]
+    wolfModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves)]
 
-    [restoreVariables(model, path) for model, path in zip(modelsList, modelPaths)]
+    [restoreVariables(model, path) for model, path in zip(sheepModelsList, sheepModelPaths)]
+    [restoreVariables(model, path) for model, path in zip(wolfModelsList, wolfModelPaths)]
 
     actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-    sheepPolicy = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in modelsList]
+    sheepPolicy = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in sheepModelsList]
     # sheepPolicy = RandomNewtonMovePolicy(numWolves)
 
 
@@ -173,7 +176,8 @@ def main():
     checkEaten = CheckEaten(killzone, isAnyKilled)
     totalScore = 10
     # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
-    humanController = JoyStickForceControllers()
+    modelController = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in wolfModelPaths]
+    # humanController = JoyStickForceControllers()
     # humanController =lambda: list(np.random.uniform(-1,1,[2,5]))
     # humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
@@ -181,7 +185,7 @@ def main():
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
     # actionSpace = list(it.product([0, 1, -1], repeat=2))
     trial = NewtonChaseTrial(numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,
-                             humanController, getEntityPos, getEntityVel, sheepPolicy, transit)
+                             modelController, getEntityPos, getEntityVel, sheepPolicy, transit)
     experiment = NewtonExperiment(trial, writer, experimentValues, reset, drawImage)
     giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImage(introductionImage)
