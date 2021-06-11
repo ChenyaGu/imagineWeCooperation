@@ -15,7 +15,7 @@ from src.writer import WriteDataFrameToCSV
 from src.trial import NewtonChaseTrial, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
 from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
-from src.functionTools.loadSaveModel import saveToPickle, restoreVariables,GetSavePath
+from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 # from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, ResetMultiAgentNewtonChasing, \
     TransitMultiAgentChasingForExp, ReshapeAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
@@ -23,7 +23,6 @@ from env.multiAgentEnv import StayInBoundaryByReflectVelocity, ResetMultiAgentNe
 from collections import OrderedDict
 
 
-#
 def main():
     dirName = os.path.dirname(__file__)
 
@@ -59,7 +58,7 @@ def main():
     totalBarLength = 100
     barHeight = 20
     stopwatchUnit = 100
-    finishTime = 1000 * 16
+    finishTime = 1000 * 15
     stopwatchEvent = pg.USEREVENT + 1
 
     saveImage = False
@@ -83,18 +82,17 @@ def main():
     restImage = pg.image.load(os.path.join(picturePath, 'rest.png'))
     finishImage = pg.image.load(os.path.join(picturePath, 'finish.png'))
     introductionImage = pg.transform.scale(introductionImage, (screenWidth, screenHeight))
-    finishImage = pg.transform.scale(finishImage, (int(screenWidth * 2 / 3), int(screenHeight / 4)))
+    # finishImage = pg.transform.scale(finishImage, (int(screenWidth * 2 / 3), int(screenHeight / 4)))
 
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewState(screen, drawBackground, targetColor, playerColors, targetRadius, playerRadius)
     drawImage = DrawImage(screen)
-    drawAttributionTrail = DrawAttributionTrail(screen, playerColors, totalBarLength, barHeight, screenCenter)
-    saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'),
-                                experimentValues["name"])
+    # drawAttributionTrail = DrawAttributionTrail(screen, playerColors, totalBarLength, barHeight, screenCenter)
+    saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'), experimentValues["name"])
 
     # --------environment setting-----------
     numWolves = 2
-    numSheeps = 2
+    numSheeps = max(manipulatedVariables['sheepNums'])
     numBlocks = 0
 
     numAgents = numWolves + numSheeps
@@ -146,28 +144,23 @@ def main():
 
     # -----------model--------
     modelFolderName = 'fakeNewtonPolicy'
-    modelSaveName = '2w2s'
+    modelSaveName = '{}w{}s'.format(numWolves, numSheeps)
     maxEpisode = 60000
     evaluateEpisode = 60000
     maxTimeStep = 75
     buildMADDPGModels = BuildMADDPGModels(actionDim, numAgents, obsShape)
-    # [print(agentID) for agentID in range(numAgents)]
-    # buildMADDPGModels(layerWidth, 1)
-    sheepModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves,numAgents)]
-    wolfModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves)]
+    modelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numAgents)]
 
     mainModelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
     modelFolder = os.path.join(mainModelFolder, modelSaveName)
     fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}individ0_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep)
-    sheepModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves,numAgents)]
-    wolfModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves)]
+    # the following include models of wolves & sheeps
+    modelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numAgents)]
 
-    [restoreVariables(model, path) for model, path in zip(sheepModelsList, sheepModelPaths)]
-    [restoreVariables(model, path) for model, path in zip(wolfModelsList, wolfModelPaths)]
-
+    [restoreVariables(model, path) for model, path in zip(modelsList, modelPaths)]
     actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-    sheepPolicy = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in sheepModelsList]
+    sheepPolicy = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in [modelsList[i]] for i in range(numWolves,numAgents)]
     # sheepPolicy = RandomNewtonMovePolicy(numWolves)
 
 
@@ -176,18 +169,17 @@ def main():
     checkEaten = CheckEaten(killzone, isAnyKilled)
     totalScore = 10
     # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
-    modelController = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in wolfModelPaths]
-    # humanController = JoyStickForceControllers()
-    # humanController =lambda: list(np.random.uniform(-1,1,[2,5]))
+    # modelController = lambda allAgentsStates: [actOneStepOneModel(model, observe(allAgentsStates)) for model in [modelsList[i]] for i in range(numWolves)]
+    humanController = JoyStickForceControllers()
     # humanController = HumanController(writer, gridSize, stopwatchEvent, stopwatchUnit, wolfSpeedRatio, drawNewState, finishTime, stayInBoundary, saveImage, saveImageDir, sheepPolicy, chooseGreedyAction)
 
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
     # actionSpace = list(it.product([0, 1, -1], repeat=2))
-    trial = NewtonChaseTrial(numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,
-                             modelController, getEntityPos, getEntityVel, sheepPolicy, transit)
+    trial = NewtonChaseTrial(screen, numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,
+                             humanController, getEntityPos, getEntityVel, sheepPolicy, transit)
     experiment = NewtonExperiment(trial, writer, experimentValues, reset, drawImage)
-    giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
+    # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImage(introductionImage)
 
     block = 2

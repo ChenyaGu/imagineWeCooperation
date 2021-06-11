@@ -32,8 +32,8 @@ class InitializeScreen:
         return screen
 
 
-def drawText(screen, text, textColorTuple, textPositionTuple):
-    font = pg.font.Font(None, 50)
+def drawText(screen, text, textColorTuple, textPositionTuple, textSize=50):
+    font = pg.font.Font(None, textSize)
     textObj = font.render(text, 1, textColorTuple)
     screen.blit(textObj, textPositionTuple)
     return

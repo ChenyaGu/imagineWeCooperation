@@ -6,9 +6,12 @@ import pickle
 from src.visualization import DrawBackground, DrawNewState, DrawImage, drawText
 from src.controller import HumanController, ModelController
 from src.updateWorld import InitialWorld
+from pygame.color import THECOLORS
+
 import os
 class NewtonChaseTrial():
-    def __init__(self,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,getEntityVel,sheepPolicy,transit):
+    def __init__(self,screen, numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,getEntityVel,sheepPolicy,transit):
+        self.screen = screen
         self.numOfWolves = numOfWolves
         self.humanController = humanController
         self.drawNewState = drawNewState
@@ -35,10 +38,13 @@ class NewtonChaseTrial():
         stateList=[]
         initTargetPositions = getTargetPos(initState)
         initPlayerPositions = getPlayerPos(initState)
-        initDisplayTime = 15 * 1000
-        self.drawNewState(initTargetPositions, initPlayerPositions, initDisplayTime, currentScore)
-        pg.display.update()
-        pg.time.wait(1000)
+        readyTime = 1000
+        while readyTime > 0:
+            pg.time.delay(32)
+            self.drawNewState(initTargetPositions, initPlayerPositions, readyTime, currentScore)
+            drawText(self.screen, 'ready',  THECOLORS['white'], (self.screen.get_width()/8*3, self.screen.get_height()/2), 100)
+            pg.display.update()
+            readyTime -= self.stopwatchUnit
         initialTime = time.get_ticks()
         while pause:
             pg.time.delay(32)
@@ -58,7 +64,7 @@ class NewtonChaseTrial():
                 elif event.type == self.stopwatchEvent:
                     newStopwatch = newStopwatch + self.stopwatchUnit
             currentStopwatch = newStopwatch
-            humanAction=self.humanController(state)
+            humanAction=self.humanController()
             # action1 = np.array(humanAction[0]) * self.wolfSpeedRatio
             # action2 = np.array(humanAction[1]) * self.wolfSpeedRatio
             # sheepAction = [np.array(self.chooseGreedyAction(self.sheepPolicy(i, np.array(dequeState) * 10))) / 10 for i in range(sheepNums) ]
@@ -112,11 +118,11 @@ class NewtonChaseTrial():
             # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * (initDisplayTime - min(wholeResponseTime, initDisplayTime)) / 1000
+            addSocre[hunterId] = self.beanReward * remainningTime / 1000
         elif True in eatenFlag:
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * (initDisplayTime - min(wholeResponseTime, initDisplayTime)) / 1000
+            addSocre[hunterId] = self.beanReward * remainningTime / 1000
 
         else:
             results["sheepEaten"] = 0
@@ -318,6 +324,8 @@ class TrialServer():
         results["trialTime"] = wholeResponseTime
         score = np.add(score, addSocre)
         return traj, targetPositions, playerPositions, score, currentStopwatch, eatenFlag, timeStepforDraw
+
+
 class ChaseTrial():
     def __init__(self, actionSpace, killzone, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,
                  attributionTrail, humanController):
