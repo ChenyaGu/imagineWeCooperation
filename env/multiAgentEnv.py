@@ -1,4 +1,3 @@
-
 import numpy as np
 
 getPosFromAgentState = lambda state: np.array([state[0], state[1]])
@@ -137,21 +136,14 @@ class RewardSheep:
         return reward
 
 
-def samplePosition(gridSize, positionDimension):
-    randomPos = lambda: np.random.uniform(0, gridSize - 1, positionDimension)
-    position = list(randomPos())
-    for i in range(positionDimension):
-        position[i] = round(position[i], 2)
-    return position
-
-
-class ResetMultiAgentChasing:
-    def __init__(self, numTotalAgents, numBlocks):
+class ResetMultiAgentChasingWithVariousSheep:
+    def __init__(self, numWolves, numBlocks):
         self.positionDimension = 2
-        self.numTotalAgents = numTotalAgents
+        self.numWolves = numWolves
         self.numBlocks = numBlocks
 
-    def __call__(self):
+    def __call__(self, numSheep):
+        self.numTotalAgents = self.numWolves + numSheep
         getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
         getAgentRandomVel = lambda: np.zeros(self.positionDimension)
         agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
@@ -162,6 +154,14 @@ class ResetMultiAgentChasing:
         blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
         state = np.array(agentsState + blocksState)
         return state
+
+
+def samplePosition(gridSize, positionDimension):
+    randomPos = lambda: np.random.uniform(0, gridSize - 1, positionDimension)
+    position = list(randomPos())
+    for i in range(positionDimension):
+        position[i] = round(position[i], 2)
+    return position
 
 
 class ResetMultiAgentNewtonChasing:

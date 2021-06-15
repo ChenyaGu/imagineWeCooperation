@@ -97,23 +97,23 @@ class DrawNewState():
 
     def __call__(self, targetPositions, playerPositions, currentTime, currentScore):
         self.drawBackground(currentTime, currentScore)
-
+        mappingFun = lambda x: (x+1)*((drawBackground.gridSize-1)/2)
         for targetPosition, targetColor in zip(targetPositions[:2], self.targetColors[:2]):
             pg.draw.circle(self.screen, targetColor,
-                           [np.int((targetPosition[0] + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
-                            np.int((targetPosition[1] + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
+                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
+                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
                            self.targetRadius)
 
         for targetPosition, targetColor in zip(targetPositions[2:], self.targetColors[2:]):
             pg.draw.circle(self.screen, targetColor,
-                           [np.int((targetPosition[0] + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
-                            np.int((targetPosition[1] + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
+                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
+                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
                            self.targetRadius)
 
         for playerPosition, playerColor in zip(playerPositions, self.playerColors):
             pg.draw.circle(self.screen, playerColor,
-                           [np.int((playerPosition[0] + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
-                            np.int((playerPosition[1] + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
+                           [np.int((mappingFun(playerPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
+                            np.int((mappingFun(playerPosition[1]) + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
                            self.playerRadius)
         return self.screen
 
