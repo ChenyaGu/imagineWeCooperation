@@ -75,11 +75,11 @@ class DrawBackground():
 
         seconds = currentTime / 1000
         drawText(self.screen, 'Time: ' + str("%4.1f" % seconds) + 's', THECOLORS['white'],
-                 (self.widthLineStepSpace * 7, self.leaveEdgeSpace * 3))
+                 (self.widthLineStepSpace * 5, self.leaveEdgeSpace * 4))
         # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
         # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
         drawText(self.screen, 'TotalScore: ' + str(round(currentScore[0] + currentScore[1], 2)), self.textColorTuple,
-                 (self.widthLineStepSpace * 40, self.leaveEdgeSpace * 3))
+                 (self.widthLineStepSpace * 30, self.leaveEdgeSpace * 4))
         return
 
 
@@ -97,7 +97,7 @@ class DrawNewState():
 
     def __call__(self, targetPositions, playerPositions, currentTime, currentScore):
         self.drawBackground(currentTime, currentScore)
-        mappingFun = lambda x: (x+1)*((drawBackground.gridSize-1)/2)
+        mappingFun = lambda x: (x+1)*((self.drawBackground.gridSize-1)/2)
         for targetPosition, targetColor in zip(targetPositions[:2], self.targetColors[:2]):
             pg.draw.circle(self.screen, targetColor,
                            [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),

@@ -30,7 +30,6 @@ class NewtonExperiment():
             response.update(result)
             trialIndex += 1
             self.writer(response, trialIndex)
-            print(result)
         # return result
 
 class Experiment():
