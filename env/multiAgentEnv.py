@@ -339,17 +339,20 @@ class IntegrateState:
 
 
 class TransitMultiAgentChasingForExp:
-    def __init__(self, reshapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents):
-        self.reshapeAction = reshapeAction
+    def __init__(self, reshapeHumanAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents):
+        self.reshapeHumanAction = reshapeHumanAction
+        self.reshapeSheepAction = reshapeSheepAction
         self.applyActionForce = applyActionForce
         self.applyEnvironForce = applyEnvironForce
         self.integrateState = integrateState
         self.checkAllAgents = checkAllAgents
 
-    def __call__(self, state, actions):
+    def __call__(self, state, humanAction, SheepAction):
         # print(state,actions)
-        actions = [self.reshapeAction(action) for action in actions]
-
+        humanAction = [self.reshapeHumanAction(action) for action in humanAction]
+        SheepAction = [self.reshapeSheepAction(action) for action in SheepAction]
+        # actions = [self.reshapeAction(action) for action in actions]
+        actions = humanAction + SheepAction
         self.numEntities = len(state)
         p_force = [None] * self.numEntities
         p_force = self.applyActionForce(p_force, actions)
@@ -378,10 +381,22 @@ class TransitMultiAgentChasing:
         return nextState
 
 
-class ReshapeAction:
+class ReshapeHumanAction:
     def __init__(self):
         self.actionDim = 2
         self.sensitivity = 1
+
+    def __call__(self, action):  # action: tuple of dim (5,1)
+        actionX = action[1] - action[2]
+        actionY = action[3] - action[4]
+        actionReshaped = np.array([actionX, actionY]) * self.sensitivity
+        return actionReshaped
+
+
+class ReshapeSheepAction:
+    def __init__(self):
+        self.actionDim = 2
+        self.sensitivity = 1.1
 
     def __call__(self, action):  # action: tuple of dim (5,1)
         actionX = action[1] - action[2]

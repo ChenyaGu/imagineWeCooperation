@@ -64,14 +64,15 @@ class NewtonChaseTrialAllCondtion():
                 elif event.type == self.stopwatchEvent:
                     newStopwatch = newStopwatch + self.stopwatchUnit
             currentStopwatch = newStopwatch
-            humanAction=self.humanController()
+            wolfPolicy=self.humanController[sheepNums]
+            humanAction=wolfPolicy(state)
             # action1 = np.array(humanAction[0]) * self.wolfSpeedRatio
             # action2 = np.array(humanAction[1]) * self.wolfSpeedRatio
             # sheepAction = [np.array(self.chooseGreedyAction(self.sheepPolicy(i, np.array(dequeState) * 10))) / 10 for i in range(sheepNums) ]
             sheepPolicy = self.allSheepPolicy[sheepNums]
             sheepAction = sheepPolicy(state)
-            action = humanAction + sheepAction
-            nextState = self.transit(state,action)
+            # action = humanAction + sheepAction
+            nextState = self.transit(state, humanAction, sheepAction)
             # targetPositions=[self.stayInBoundary(np.add(targetPosition, singleAction))  for (targetPosition,singleAction)  in zip(targetPositions,sheepAction)]
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
             state = nextState
