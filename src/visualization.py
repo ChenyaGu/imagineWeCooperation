@@ -79,7 +79,7 @@ class DrawBackground():
         # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
         # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
         drawText(self.screen, 'TotalScore: ' + str(round(currentScore[0] + currentScore[1], 2)), self.textColorTuple,
-                 (self.widthLineStepSpace * 30, self.leaveEdgeSpace * 4))
+                 (self.widthLineStepSpace * 28, self.leaveEdgeSpace * 4))
         return
 
 

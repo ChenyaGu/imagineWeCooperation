@@ -396,7 +396,7 @@ class ReshapeHumanAction:
 class ReshapeSheepAction:
     def __init__(self):
         self.actionDim = 2
-        self.sensitivity = 1.1
+        self.sensitivity = 1.3
 
     def __call__(self, action):  # action: tuple of dim (5,1)
         actionX = action[1] - action[2]

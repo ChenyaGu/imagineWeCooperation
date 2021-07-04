@@ -29,7 +29,7 @@ def main():
 
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1, 2, 4]
-    trailNumEachCondition = 10
+    trailNumEachCondition = 8
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -42,7 +42,7 @@ def main():
     screenWidth = 800
     screenHeight = 800
     screenCenter = [screenWidth / 2, screenHeight / 2]
-    fullScreen = False
+    fullScreen = True #False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -75,7 +75,7 @@ def main():
 
     experimentValues = co.OrderedDict()
     # experimentValues["name"] = input("Please enter players' name:").capitalize()
-    experimentValues["name"] = 'test'
+    experimentValues["name"] = '0704'
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
     writer = WriteDataFrameToCSV(writerPath)
     introductionImage = pg.image.load(os.path.join(picturePath, 'introduction.png'))
@@ -131,9 +131,8 @@ def main():
                                               getPosFromAgentState)
         integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
                                         getVelFromAgentState, getPosFromAgentState)
-        transit = TransitMultiAgentChasingForExp(reshapeHumanAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState,
-                                                 checkAllAgents)
-
+        transit = TransitMultiAgentChasingForExp(reshapeHumanAction, reshapeHumanAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
+        # transit = TransitMultiAgentChasingForExp(reshapeHumanAction, reshapeSheepAction, applyActionForce,applyEnvironForce, integrateState, checkAllAgents)
         def loadPolicyOneCondition(numSheeps):
             # -----------observe--------
             observeOneAgent1 = lambda agentID, sId: Observe(agentID, wolvesID, sId, blocksID, getPosFromAgentState,
@@ -186,35 +185,33 @@ def main():
         allWolfPolicy.update({numSheeps: wolfPolicy})
 
     checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
-    killzone1 = wolfSize + sheepSize
-    killzone2 = (wolfSize + sheepSize) * 0.9
-    checkEaten1 = CheckEaten(killzone1, isAnyKilled)
-    checkEaten2 = CheckEaten(killzone2, isAnyKilled)
+    killzone = (wolfSize + sheepSize) * 1.1
+    # killzone = wolfSize + sheepSize
+    checkEaten = CheckEaten(killzone, isAnyKilled)
+    # checkEaten = CheckEaten(killzone, isAnyKilled)
     # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
     # sheepPolicy = RandomNewtonMovePolicy(numWolves)
-    modelController = allWolfPolicy
-    # humanController = JoyStickForceControllers()
+    # modelController = allWolfPolicy
+    humanController = JoyStickForceControllers()
 
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
-    trial1 = NewtonChaseTrialAllCondtion(screen, numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten1,
-                             modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
-    experiment = NewtonExperiment(trial1, writer, experimentValues, reset, drawImage)
+    trial = NewtonChaseTrialAllCondtion(screen, numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,
+                             humanController, getEntityPos, getEntityVel, allSheepPolicy, transit)
+    experiment = NewtonExperiment(trial, writer, experimentValues, reset, drawImage)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImage(introductionImage)
     block = 1
 
     for i in range(block):
-        trialIndex = 0
         score = np.array([0, 0])
         experiment(finishTime, AllConditions)
         # giveExperimentFeedback(i, score)
         if i == block - 1:
             drawImage(finishImage)
+            # drawImage(restImage)
         else:
             drawImage(restImage)  # 30 sec then press space
-
-    # print(participantsScore)
 
 
 if __name__ == "__main__":
