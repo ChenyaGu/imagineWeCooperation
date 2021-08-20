@@ -3,33 +3,39 @@ import pandas as pd
 
 
 class NewtonExperiment():
-    def __init__(self, trial, writer, experimentValues, reset, drawImage):
+    def __init__(self,restImage,hasRest, trial, writer, experimentValues, reset, drawImage):
         self.trial = trial
         self.writer = writer
         self.experimentValues = experimentValues
         self.reset = reset
         self.drawImage = drawImage
-
-    def __call__(self, finishTime, trailCondtions):
+        self.restImage = restImage
+        self.hasRest = hasRest
+    def __call__(self, finishTime, trailCondtions,restDuration=300):
 
         trialIndex = 0
         score = np.array([0, 0])
-
-        for conditon in trailCondtions:
-            sheepNums = conditon['sheepNums']
+        # for trialIndex in range(len(trailCondtions)):
+        for condition in trailCondtions:
+            # condition = trailCondtions[trialIndex]
+            print(condition)
+            sheepNums = condition['sheepNums']
             initState = self.reset(sheepNums)
             currentStopwatch = 0
             timeStepforDraw = 0
             print('trial', trialIndex+1)
             print('Number of sheeps:', sheepNums)
             result, finalState, score, currentStopwatch, eatenFlag, timeStepforDraw = self.trial(
-                initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, sheepNums)
+                initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, condition)
             result["sheepNums"] = sheepNums
             result["score"] = str(score)
             response = self.experimentValues.copy()
             response.update(result)
             trialIndex += 1
             self.writer(response, trialIndex)
+            if np.mod(trialIndex + 1, restDuration) == 0 & self.hasRest:
+                # self.darwBackground()
+                self.drawImage(self.restImage)
         # return result
 
 class Experiment():

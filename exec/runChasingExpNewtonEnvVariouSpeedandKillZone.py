@@ -14,35 +14,39 @@ from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExper
     DrawAttributionTrail, DrawImageWithJoysticksCheck
 from src.controller import HumanController, ModelController, JoyStickForceControllers
 from src.writer import WriteDataFrameToCSV
-from src.trial import NewtonChaseTrialAllCondtion, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial
+from src.trial import NewtonChaseTrialAllCondtionVariouSpeedAndKillZone, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial,CheckEatenVariousKillzone
 from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 # from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, ResetMultiAgentChasingWithVariousSheep, \
-    TransitMultiAgentChasingForExp, ReshapeHumanAction, ReshapeSheepAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
-    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe
+    TransitMultiAgentChasingForExpVariousForce, ReshapeHumanAction, ReshapeSheepAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
+    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe,ReshapeActionVariousForce,ResetMultiAgentNewtonChasingVariousSheep
 from collections import OrderedDict
 
 def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
-    trailNumEachCondition = 1
+    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepWolfForceRatio'] = [1.0,1.3]
+    manipulatedVariables['killZoneRatio'] = [1.1,1.0]
+    trailNumEachCondition = 8
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
     AllConditions = parametersAllCondtion * trailNumEachCondition
     random.shuffle(AllConditions)
 
+    experimentValues = co.OrderedDict()
+    experimentValues["name"] = input("Please enter players' name:").capitalize()
+
     gridSize = 40
     leaveEdgeSpace = 5
 
     screenWidth = 800
     screenHeight = 800
-    screenCenter = [screenWidth / 2, screenHeight / 2]
-    fullScreen = True #False
+    fullScreen = False #False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -50,19 +54,18 @@ def main():
     targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
     playerColors = [THECOLORS['blue'], THECOLORS['red']]
     textColorTuple = THECOLORS['green']
-    wolfSize = 0.075
-    sheepSize = 0.05
-    blockSize = 0.2
+    wolfSize = 0.075#0.075
+    sheepSize = 0.05#0.05
+    blockSize = 0.0
     playerRadius = int(screenWidth/(gridSize+2*leaveEdgeSpace))
     targetRadius = int(screenWidth/(gridSize+2*leaveEdgeSpace))
-    totalBarLength = 100
-    barHeight = 20
+
     stopwatchUnit = 100
     finishTime = 1000 * 15
     stopwatchEvent = pg.USEREVENT + 1
 
-    saveImage = False
-    wolfSpeedRatio = 1
+    # saveImage = False
+    # wolfSpeedRatio = 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)
     pg.event.set_allowed([pg.KEYDOWN, pg.QUIT, stopwatchEvent])
@@ -73,9 +76,8 @@ def main():
     resultsDicPath = os.path.join(dirName, '..', 'results')
     # resultsDicPath = posixpath.join(dirName, '..', 'results')
 
-    experimentValues = co.OrderedDict()
-    # experimentValues["name"] = input("Please enter players' name:").capitalize()
-    experimentValues["name"] = '0704'
+    
+    # experimentValues["name"] = '0704'
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
     writer = WriteDataFrameToCSV(writerPath)
     introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))
@@ -87,8 +89,11 @@ def main():
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewState(screen, drawBackground, targetColor, playerColors, targetRadius, playerRadius)
     drawImage = DrawImage(screen)
+    # totalBarLength = 100
+    # barHeight = 20
+    # screenCenter = [screenWidth / 2, screenHeight / 2]
     # drawAttributionTrail = DrawAttributionTrail(screen, playerColors, totalBarLength, barHeight, screenCenter)
-    saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'), experimentValues["name"])
+    # saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'), experimentValues["name"])
 
     # --------environment setting-----------
     numWolves = 2
@@ -114,8 +119,9 @@ def main():
         entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
         entitiesMovableList = [True] * numAgents + [False] * numBlocks
         massList = [1.0] * numEntities
-
-        reset = ResetMultiAgentChasingWithVariousSheep(numWolves, numBlocks)
+        minDistance = 0.3
+        reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, minDistance)
+        # reset = ResetMultiAgentChasingWithVariousSheep(numWolves, numBlocks)
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-1, 1], [-1, 1])
 
         def checkBoudary(agentState):
@@ -123,15 +129,17 @@ def main():
             return newState
 
         checkAllAgents = lambda states: [checkBoudary(agentState) for agentState in states]
-        reshapeHumanAction = ReshapeHumanAction()
-        reshapeSheepAction = ReshapeSheepAction()
+        # reshapeHumanAction = ReshapeHumanAction()
+        # reshapeSheepAction = ReshapeSheepAction()
+        reShapeAction = ReshapeActionVariousForce()
         getCollisionForce = GetCollisionForce()
         applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
         applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList, getCollisionForce,
                                               getPosFromAgentState)
         integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
                                         getVelFromAgentState, getPosFromAgentState)
-        transit = TransitMultiAgentChasingForExp(reshapeHumanAction, reshapeHumanAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
+                                        
+        transit = TransitMultiAgentChasingForExpVariousForce(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
         # transit = TransitMultiAgentChasingForExp(reshapeHumanAction, reshapeSheepAction, applyActionForce,applyEnvironForce, integrateState, checkAllAgents)
         def loadPolicyOneCondition(numSheeps):
             # -----------observe--------
@@ -182,9 +190,8 @@ def main():
         allWolfPolicy.update({numSheeps: wolfPolicy})
 
     checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
-    killzone = (wolfSize + sheepSize) * 1.1
-    # killzone = wolfSize + sheepSize
-    checkEaten = CheckEaten(killzone, isAnyKilled)
+    baselineKillzone = wolfSize + sheepSize
+    checkEaten = CheckEatenVariousKillzone( isAnyKilled)
     # checkEaten = CheckEaten(killzone, isAnyKilled)
     # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
     # sheepPolicy = RandomNewtonMovePolicy(numWolves)
@@ -193,16 +200,17 @@ def main():
     drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
-    trial = NewtonChaseTrialAllCondtion(screen, numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,
-                             humanController, getEntityPos, getEntityVel, allSheepPolicy, transit)
-    experiment = NewtonExperiment(trial, writer, experimentValues, reset, drawImage)
+    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZone(screen,baselineKillzone, numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController, getEntityPos, getEntityVel, allSheepPolicy, transit)
+
+    hasRest = True
+    experiment = NewtonExperiment(restImage,hasRest,trial, writer, experimentValues, reset, drawImageBoth)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImageBoth(introductionImage)
-    block = 2
-
+    block = 1
+    restDuration = 8
     for i in range(block):
         score = np.array([0, 0])
-        experiment(finishTime, AllConditions)
+        experiment(finishTime, AllConditions,restDuration)
         # giveExperimentFeedback(i, score)
         if i == block - 1:
             drawImage(finishImage)
