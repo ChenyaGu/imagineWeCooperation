@@ -28,10 +28,10 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepNums'] = [1,2,4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.0,1.3]
     manipulatedVariables['killZoneRatio'] = [1.1,1.0]
-    trailNumEachCondition = 8
+    trailNumEachCondition = 20
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -46,7 +46,7 @@ def main():
 
     screenWidth = 800
     screenHeight = 800
-    fullScreen = False #False
+    fullScreen = True #False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -119,7 +119,7 @@ def main():
         entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
         entitiesMovableList = [True] * numAgents + [False] * numBlocks
         massList = [1.0] * numEntities
-        minDistance = 0.3
+        minDistance = 0.5
         reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, minDistance)
         # reset = ResetMultiAgentChasingWithVariousSheep(numWolves, numBlocks)
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-1, 1], [-1, 1])
@@ -207,7 +207,7 @@ def main():
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImageBoth(introductionImage)
     block = 1
-    restDuration = 8
+    restDuration = 60
     for i in range(block):
         score = np.array([0, 0])
         experiment(finishTime, AllConditions,restDuration)

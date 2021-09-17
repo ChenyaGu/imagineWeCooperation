@@ -42,7 +42,7 @@ def main():
     screenWidth = 800
     screenHeight = 800
     screenCenter = [screenWidth / 2, screenHeight / 2]
-    fullScreen = True #False
+    fullScreen = False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -75,7 +75,7 @@ def main():
 
     experimentValues = co.OrderedDict()
     # experimentValues["name"] = input("Please enter players' name:").capitalize()
-    experimentValues["name"] = '0704'
+    experimentValues["name"] = 'practice'
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
     writer = WriteDataFrameToCSV(writerPath)
     introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))

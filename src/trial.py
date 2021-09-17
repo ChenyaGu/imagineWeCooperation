@@ -140,8 +140,10 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZone():
             results["sheepEaten"] = 0
         score = np.add(score, addSocre)
         totalScore = score[0] + score[1]
+        playerScore1 = score[0]
+        playerScore2 = score[1]
         print(totalScore)
-        return results, nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
+        return results, nextState, score, playerScore1, playerScore2, totalScore, currentStopwatch, eatenFlag, timeStepforDraw
 
 class NewtonChaseTrialAllCondtion():
     def __init__(self,screen, numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,humanController,getEntityPos,getEntityVel,allSheepPolicy,transit):
