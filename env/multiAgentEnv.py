@@ -14,16 +14,16 @@ class StayInBoundaryByReflectVelocity():
         adjustedVelX, adjustedVelY = velocity
         if position[0] >= self.xMax:
             adjustedX = 2 * self.xMax - position[0]
-            adjustedVelX = -velocity[0]
+            adjustedVelX = -abs(velocity[0])
         if position[0] <= self.xMin:
             adjustedX = 2 * self.xMin - position[0]
-            adjustedVelX = -velocity[0]
+            adjustedVelX = abs(velocity[0])
         if position[1] >= self.yMax:
             adjustedY = 2 * self.yMax - position[1]
-            adjustedVelY = -velocity[1]
+            adjustedVelY = -abs(velocity[1])
         if position[1] <= self.yMin:
             adjustedY = 2 * self.yMin - position[1]
-            adjustedVelY = -velocity[1]
+            adjustedVelY = abs(velocity[1])
         checkedPosition = np.array([adjustedX, adjustedY])
         checkedVelocity = np.array([adjustedVelX, adjustedVelY])
         return np.array(list(checkedPosition) + list(checkedVelocity))
@@ -135,32 +135,31 @@ class RewardSheep:
             reward.append(sheepReward)
         return reward
 class ResetMultiAgentNewtonChasingVariousSheep:
-    def __init__(self, numPlayers, minDistance):
+    def __init__(self, numPlayers, mapSize, minDistance):
         self.positionDimension = 2
         self.numPlayers = numPlayers
+        self.mapSize = mapSize
         self.minDistance = minDistance
 
     def __call__(self, numSheeps):
-        sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-1, 1,self.positionDimension))]
+        # sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-1, 1,self.positionDimension))]
+        sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize, self.mapSize, self.positionDimension))]
 
 
         initAgentRandomPos = [sampleOneAgentPosition() for ID in range(self.numPlayers)]
         initAgentZeroVel = lambda: np.zeros(self.positionDimension)
 
         initSheepRandomPos = [sampleOneAgentPosition() for sheepID in range(numSheeps)]
-        print(initSheepRandomPos,'a')
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
         for i, sheepPos in enumerate(initSheepRandomPos):
             while np.any(np.array([np.linalg.norm(np.array(agentPos) - np.array(sheepPos)) for agentPos in
                                    initAgentRandomPos]) < self.minDistance):
-                print(initAgentRandomPos,i)
                 sheepPos = sampleOneAgentPosition()
             initSheepRandomPos[i] = sheepPos
         agentsState = [state + vel for state, vel in
                        zip(initAgentRandomPos, [list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
         sheepState = [state + vel for state, vel in
                       zip(initSheepRandomPos, [list(initSheepRandomVel()) for ID in range(numSheeps)])]
-        print(initSheepRandomPos,'b')
         state = np.array(agentsState + sheepState)
         return state
 
@@ -387,6 +386,8 @@ class TransitMultiAgentChasingForExpVariousForce:
         nextState = self.integrateState(p_force, state)
         nextState = self.checkAllAgents(nextState)
         return nextState
+
+
 class TransitMultiAgentChasingForExp:
     def __init__(self, reshapeHumanAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents):
         self.reshapeHumanAction = reshapeHumanAction

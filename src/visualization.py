@@ -84,36 +84,37 @@ class DrawBackground():
 
 
 class DrawNewState():
-    def __init__(self, screen, drawBackground, targetColors, playerColors, targetRadius, playerRadius):
+    def __init__(self, screen, drawBackground, targetColors, playerColors, targetRadius, playerRadius, mapSize):
         self.screen = screen
         self.drawBackground = drawBackground
         self.targetColors = targetColors
         self.playerColors = playerColors
         self.targetRadius = targetRadius
         self.playerRadius = playerRadius
+        self.mapSize = mapSize
         self.leaveEdgeSpace = drawBackground.leaveEdgeSpace
         self.widthLineStepSpace = drawBackground.widthLineStepSpace
         self.heightLineStepSpace = drawBackground.heightLineStepSpace
 
     def __call__(self, targetPositions, playerPositions, currentTime, currentScore):
         self.drawBackground(currentTime, currentScore)
-        mappingFun = lambda x: (x+1)*((self.drawBackground.gridSize-1)/2)
+        mappingFun = lambda x: (x + self.mapSize)*(self.drawBackground.gridSize/(2*self.mapSize))  # mapping maxRange to gridSize
         for targetPosition, targetColor in zip(targetPositions[:2], self.targetColors[:2]):
             pg.draw.circle(self.screen, targetColor,
-                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
-                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
+                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
+                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
                            self.targetRadius)
 
         for targetPosition, targetColor in zip(targetPositions[2:], self.targetColors[2:]):
             pg.draw.circle(self.screen, targetColor,
-                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
-                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
+                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
+                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
                            self.targetRadius)
 
         for playerPosition, playerColor in zip(playerPositions, self.playerColors):
             pg.draw.circle(self.screen, playerColor,
-                           [np.int((mappingFun(playerPosition[0]) + self.leaveEdgeSpace + 0.5) * self.widthLineStepSpace),
-                            np.int((mappingFun(playerPosition[1]) + self.leaveEdgeSpace + 0.5) * self.heightLineStepSpace)],
+                           [np.int((mappingFun(playerPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
+                            np.int((mappingFun(playerPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
                            self.playerRadius)
         return self.screen
 class DrawImageWithJoysticksCheck():
