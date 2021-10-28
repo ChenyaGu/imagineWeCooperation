@@ -81,7 +81,41 @@ class DrawBackground():
         drawText(self.screen, 'TotalScore: ' + str(round(currentScore[0] + currentScore[1], 2)), self.textColorTuple,
                  (self.widthLineStepSpace * 28, self.leaveEdgeSpace * 4))
         return
+class DrawNewStateWithObstacle():
+    def __init__(self, screen, drawBackground, targetColors, playerColors,obstacleColors, targetRadius, playerRadius,obstacleRaius, mapSize):
+        self.screen = screen
+        self.drawBackground = drawBackground
+        self.targetColors = targetColors
+        self.playerColors = playerColors
+        self.targetRadius = targetRadius
+        self.playerRadius = playerRadius
+        self.obstacleRaius = obstacleRaius
+        self.mapSize = mapSize
+        self.leaveEdgeSpace = drawBackground.leaveEdgeSpace
+        self.widthLineStepSpace = drawBackground.widthLineStepSpace
+        self.heightLineStepSpace = drawBackground.heightLineStepSpace
 
+    def __call__(self, targetPositions, playerPositions,obstaclePositions,currentTime, currentScore):
+        self.drawBackground(currentTime, currentScore)
+        mappingFun = lambda x: (x + self.mapSize)*(self.drawBackground.gridSize/(2*self.mapSize))  # mapping maxRange to gridSize
+        for targetPosition, targetColor in zip(targetPositions[:], self.targetColors[:]):
+            pg.draw.circle(self.screen, targetColor,
+                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
+                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
+                           self.targetRadius)
+
+        for obstaclePosition, obstacleColor in zip(obstaclePositions[:], self.obstacleColors[:]):
+            pg.draw.circle(self.screen, obstacleColor,
+                           [np.int((mappingFun(obstaclePosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
+                            np.int((mappingFun(obstaclePosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
+                           self.obstacleRadius)
+
+        for playerPosition, playerColor in zip(playerPositions, self.playerColors):
+            pg.draw.circle(self.screen, playerColor,
+                           [np.int((mappingFun(playerPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
+                            np.int((mappingFun(playerPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
+                           self.playerRadius)
+        return self.screen
 
 class DrawNewState():
     def __init__(self, screen, drawBackground, targetColors, playerColors, targetRadius, playerRadius, mapSize):
