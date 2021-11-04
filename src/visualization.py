@@ -68,10 +68,7 @@ class DrawBackground():
 
     def __call__(self, currentTime, currentScore):
         self.screen.fill((0, 0, 0))
-        pg.draw.rect(self.screen, self.backgroundColor, pg.Rect(np.int(self.leaveEdgeSpace * self.widthLineStepSpace),
-                                                                np.int(self.leaveEdgeSpace * self.heightLineStepSpace),
-                                                                np.int(self.gridSize * self.widthLineStepSpace),
-                                                                np.int(self.gridSize * self.heightLineStepSpace)))
+        pg.draw.rect(self.screen, self.backgroundColor, pg.Rect(np.int(self.leaveEdgeSpace * self.widthLineStepSpace),np.int(self.leaveEdgeSpace * self.heightLineStepSpace),np.int(self.gridSize * self.widthLineStepSpace),np.int(self.gridSize * self.heightLineStepSpace)))
 
         seconds = currentTime / 1000
         drawText(self.screen, 'Time: ' + str("%4.1f" % seconds) + 's', THECOLORS['white'],

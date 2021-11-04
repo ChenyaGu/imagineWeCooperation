@@ -60,6 +60,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
             pg.display.update()
             readyTime -= self.stopwatchUnit
         initialTime = time.get_ticks()
+        eatenFlag = [0] * len(initTargetPositions)
+        hunterFlag = [0] * len(initPlayerPositions)
         while pause:
             pg.time.delay(32)
             remainningTime = max(0, finishTime - newStopwatch)
@@ -89,7 +91,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
             state = nextState
             stateList.append(nextState)
-            eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions,killZone)
+            eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions,killZone,eatenFlag, hunterFlag)
             pause = self.checkTerminationOfTrial(eatenFlag, currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
@@ -592,9 +594,8 @@ class RecordEatenNumber:
     def __init__(self, isAnyKilled):
         self.isAnyKilled = isAnyKilled
 
-    def __call__(self, targetPositions, playerPositions, killzone):
-        eatenFlag = [0] * len(targetPositions)
-        hunterFlag = [0] * len(playerPositions)
+    def __call__(self, targetPositions, playerPositions, killzone,eatenFlag, hunterFlag):
+
         for (i, targetPosition) in enumerate(targetPositions):
             if self.isAnyKilled(playerPositions, targetPosition, killzone):
                 eatenFlag[i] += 1

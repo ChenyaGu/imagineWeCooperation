@@ -41,9 +41,9 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 2.0
+    mapSize = 1.0
     minDistance = mapSize * 1 / 3
-    sizeRatio = 2.0
+    sizeRatio = 1.0
     wolfSize = 0.075 * sizeRatio
     sheepSize = 0.05 * sizeRatio
     blockSize = 0.2 * sizeRatio
@@ -63,13 +63,15 @@ def main():
     gridSize = 40
     leaveEdgeSpace = 5
     objectZoomRatio = 10
-    playerRadius = int(wolfSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
-    targetRadius = int(sheepSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
-    blockRadius = int(blockSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
-
+    # playerRadius = int(wolfSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
+    # targetRadius = int(sheepSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
+    # blockRadius = int(blockSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
+    playerRadius = int(wolfSize/(mapSize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
+    targetRadius = int(sheepSize/(mapSize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
+    blockRadius = int(blockSize/(mapSize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
     finishTime = 1000 * 60
-    finishEatenNumber = 3
+    finishEatenNumber = 30
     stopwatchEvent = pg.USEREVENT + 1
 
     # saveImage = False
