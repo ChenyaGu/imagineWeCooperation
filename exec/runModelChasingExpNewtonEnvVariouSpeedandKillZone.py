@@ -102,7 +102,7 @@ def main():
     # --------environment setting-----------
     numWolves = 2
     # numSheeps = max(manipulatedVariables['sheepNums'])
-    numBlocks = 0
+    numBlocks = 2
     allSheepPolicy = {}
     allWolfPolicy = {}
     for numSheeps in manipulatedVariables['sheepNums']:
@@ -175,7 +175,7 @@ def main():
             mainModelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
             modelFolder = os.path.join(mainModelFolder, modelSaveName)
             fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}individ{}_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, individualReward)
-            sheepModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in
+            sheepModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(   ) + 'eps') for i in
                                range(numWolves, numAgents)]
             wolfModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in
                               range(numWolves)]

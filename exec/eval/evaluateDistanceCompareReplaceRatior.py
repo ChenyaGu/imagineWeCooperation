@@ -15,6 +15,7 @@ import itertools as it
 from collections import OrderedDict
 import numpy as np
 import glob
+import pickle
 # from env.multiAgentMujocoEnv import RewardSheep, RewardWolf, Observe, IsCollision, getPosFromAgentState, \
 #     getVelFromAgentState,PunishForOutOfBound,ReshapeAction, TransitionFunctionWithoutXPos, ResetUniformWithoutXPosForLeashed
 
@@ -31,7 +32,11 @@ distractorColor = np.array([0.35, 0.85, 0.85])
 blockColor = np.array([0.25, 0.25, 0.25])
 
 
-
+def loadFromPickle(path):
+    pickleIn = open(path, 'rb')
+    object = pickle.load(pickleIn)
+    pickleIn.close()
+    return object
 
 class ReshapeAction:
     def __init__(self,sensitivity):
@@ -143,43 +148,32 @@ class ComputeStatistics:
         allTrajectories = self.getTrajectories(oneConditionDf)
         allMeasurements = np.array([self.measurementFunction(trajectory) for trajectory in allTrajectories])
         # print(oneConditionDf)
-        measurementMean = np.mean(allMeasurements, axis = 0)
+        measurementMean = np.max(allMeasurements, axis = 0)
         measurementStd = np.std(allMeasurements, axis = 0)
         return pd.Series({'mean': measurementMean, 'std': measurementStd})
 
+def getMaxRange(traj):
+    # print(traj[0][0])
+    stateList=[state[0] for state in traj]
+    absStateList = [np.abs(state) for state in stateList]
+    absPosList = [[agentState[:2] for agentState in state] for state in absStateList]
+    # print(len(absPosList[0]))
+    absPosList = [state[2:-2] for state in absPosList]
+    return np.max(absPosList)
 def main():
  
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['damping'] = [0.0,0.5]#[0.0, 1.0]
-    manipulatedVariables['frictionloss'] =[0.0,1.0]# [0.0, 0.2, 0.4] 
-    manipulatedVariables['ropeLength'] = [0.06]# [0.06,0.09]#[0.0, 1.0]
-    manipulatedVariables['killZone'] = [4.5]#[0.0, 1.0]
-    manipulatedVariables['killZoneofDistractor'] = [0.0]#[0.0, 1.0]
+    manipulatedVariables['numWolves'] = [2]#[0.0, 1.0]
+    manipulatedVariables['numSheeps'] =[1,2,4]# [0.0, 0.2, 0.4] 
+    manipulatedVariables['numBlocks'] = [2]# [0.06,0.09]#[0.0, 1.0]
+    manipulatedVariables['trainEpsidode'] = [5000,20000,40000,60000]#[0.0, 1.0]
 
-    manipulatedVariables['offset'] = [0.0]
-    
-    manipulatedVariables['hideId'] = [6]
-
-    allAgentNames =  ['wolf','sheep','master','disractor1','disractor2']
-    agentIdName = allAgentNames.copy()
-    # del(agentIdName[manipulatedVariables['hideId'][0]])
-    # damping = 0.5
-    # frictionloss = 1.0
-    masterForce = 2.0
-    sheepForce = 5.0
-    # wolfMass = 1.0
-
-    killZone = 2.0
-    ropePunishWeight = 0.3
-
-    masterMass = 2.0
-    distractorNoise = 0.0
-
-    folderNameList = ['masterForceAndMass','masterAndWolfMass']
-    folderName = folderNameList[0]
-    evalNum=50
-    evaluateEpisode=60000
+    maxEpisode = 60000
+    maxTimeStep = 75
+    sheepSpeedMultiplier = 1.0
+    individualRewardWolf = 0.0
+   
 
 
 
@@ -189,105 +183,23 @@ def main():
     toSplitFrame = pd.DataFrame(index=modelIndex)
 
 
-
-
-    dataFolder = os.path.join(dirName, '..','..', 'data')
-
-    trajectoryDirectory = os.path.join(dataFolder, 'trajectory', 'Oct26',folderName)
+    dataFolder = os.path.join(dirName, '..','..', 'results')
+    folderName = '1020'
+    trajectoryDirectory = os.path.join(dataFolder, 'traj',folderName)
     trajectoryExtension = '.pickle'
 
 
-    trajectoryFixedParameters = {'evalNum':evalNum,'evaluateEpisode':evaluateEpisode,'masterForce':masterForce,'ropePunishWeight':ropePunishWeight,'masterMass':masterMass,'distractorNoise':distractorNoise}
+    # loadFromPickle = 
+    getTrajPath = lambda conditon: os.path.join(trajectoryDirectory,"maddpg{}wolves{}sheep{}blocks{}eps{}stepSheepSpeed{}individualRewardWolf{}eps{}Traj".format(conditon['numWolves'],conditon['numSheeps'], conditon['numBlocks'], maxEpisode, maxTimeStep, sheepSpeedMultiplier, individualRewardWolf,conditon['trainEpsidode']))
 
-    getTrajectorySavePath = GetSavePath(trajectoryDirectory, trajectoryExtension, trajectoryFixedParameters)
-
-    fuzzySearchParameterNames = []
-    loadTrajectories = LoadTrajectories(getTrajectorySavePath, loadFromPickle, fuzzySearchParameterNames)
-    loadTrajectoriesFromDf = lambda df: loadTrajectories(readParametersFromDf(df))
+    loadTrajectoriesFromDf = lambda df: loadFromPickle(getTrajPath(readParametersFromDf(df)))
     
-    def calChasingSubPair(tragetAgentsId):  
-        measurementFunction = lambda trajectory: calculateChasingSubtlety(trajectory,tragetAgentsId)
+    measurementFunction = lambda trajectory: getMaxRange(trajectory)
         # measurementFunction = lambda trajectory: calculateDistance(trajectory,tragetAgentsId)
-        computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
-        statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
-
-        statisticsDf_ = statisticsDf.reset_index()
-
-        statisticsDf_['{}->{}'.format(agentIdName[tragetAgentsId[0]],agentIdName[tragetAgentsId[1]])] =statisticsDf_.loc[:,'mean']
-
-        print(statisticsDf_)
-        return statisticsDf_
-
-    evlueatePairs = [[0,1],[2,0],[2,3]]#for hide distractor
-    
-    
-    data = [calChasingSubPair(Ids) for Ids in evlueatePairs]
-    # df = data[0].join(data[1],on=['ropeLength','distractorNoise','offset','hideId'])
-    tomergeKeys = list(manipulatedVariables.keys())
-    df=pd.merge(data[0],data[1],on=tomergeKeys)
-    df2 = pd.merge(df,data[2],on=tomergeKeys)
-    print(df)
-    csvfilePath = os.path.join(trajectoryDirectory,'{}SubtletyMasterForce.csv'.format(folderName))
-    # csvfilePath = os.path.join(trajectoryDirectory,'{}Distance.csv'.format(folderName))
-    df2.dropna(axis=0)
-    print(df2)
-    df2.to_csv(csvfilePath)
-    lableList = ['{}->{}'.format(agentIdName[a],agentIdName[b]) for a,b in evlueatePairs]
-
-    # tragetAgentsId1 = [0,1]
-    # dfwolf_sheep =  calChasingSubPair(tragetAgentsId1)  
-    # tragetAgentsId2 = [0,2]
-    # dfwolf_distra1 = calChasingSubPair(tragetAgentsId2) 
-    # tragetAgentsId3 = [0,3]
-    # dfwolf_distra2 = calChasingSubPair(tragetAgentsId3) 
-
-    # tragetAgentsId4 = [1,2]
-    # dfsheep_distra1 = calChasingSubPair(tragetAgentsId4) 
-    # tragetAgentsId5 = [1,3]
-    # dfsheep_distra2 = calChasingSubPair(tragetAgentsId5) 
-
-    # lableList = ['{}->{}'.format(agentIdName[a],agentIdName[b]) for a,b in [tragetAgentsId1,tragetAgentsId2,tragetAgentsId3,tragetAgentsId4,tragetAgentsId5]]
-
-    # measurementFunction2 = lambda trajectory: calculateChasingSubtlety(trajectory,tragetAgentsId2)
-    # computeStatistics2 = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction2)
-    # statisticsDf2 = toSplitFrame.groupby(levelNames).apply(computeStatistics2)
-    # statisticsDf2_ = statisticsDf2.reset_index()
-    # dfwolf_distra1 = statisticsDf2_.groupby('offset').mean()
-
-    # tragetAgentsId3 = [1,2]
-    # measurementFunction3 = lambda trajectory: calculateChasingSubtlety(trajectory,tragetAgentsId3)
-    # computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction3)
-    # statisticsDf3 = toSplitFrame.groupby(levelNames).apply(computeStatistics)
-    # statisticsDf3_ = statisticsDf3.reset_index()
-    # dfsheep_distra1 = statisticsDf3_.groupby('offset').mean()
-
-    # print(dfwolf_sheep,dfwolf_distra1,dfsheep_distra1,dfwolf_distra2,dfsheep_distra2)
-
-
-    from matplotlib import pyplot as plt
-    fig = plt.figure()
-    axForDraw = fig.add_subplot(1,1,1)
-    # dfwolf_sheep.plot(ax=axForDraw, label='wolf->sheep', y='mean',marker='o',color='green', logx=False)
-    # dfwolf_distra1.plot(ax=axForDraw, label='wolf->distra1', y='mean',marker='o',color='red', logx=False)
-    # dfsheep_distra1.plot(ax=axForDraw, label='sheep->distra1', y='mean',marker='o',color='blue', logx=False)
-    # dfwolf_distra2.plot(ax=axForDraw, label='wolf->distra2', y='mean',marker='o',color='brown', logx=False)
-    # dfsheep_distra2.plot(ax=axForDraw, label='sheep->distra2', y='mean',marker='o',color='orange', logx=False)
-    # data = [dfwolf_sheep,dfwolf_distra1,dfwolf_distra2,dfsheep_distra1,dfsheep_distra2]
-    # print(dfwolf_sheep['offset'=0.0]['mean'])
-    # print(dfwolf_sheep.values)
-    toDrawData = [df.values[0][1] for df in data]
-    plt.bar(range(len(toDrawData)),toDrawData,tick_label=lableList)
-    
-    axForDraw.set_ylim(0, 2)
-    # axForDraw.set_ylim(30, 120)
-    # plt.suptitle('sheepCrossLeashPerTraj\n50trajs\nropePunishWeight={}killZone={}ropeLength={}'.format(ropePunishWeight,killZone,ropeLength))
-    # plt.suptitle('AverageChasingSubtlety\nmasterMass={}killZone={}ropeLength={}'.format(masterMass,killZone,ropeLength))
-    # plt.suptitle('AverageChasingSubtletyHideAgent={}\nmasterForce={}sheepForce={}wolfMass={}'.format(allAgentNames[manipulatedVariables['hideId'][0]],masterForce,sheepForce,wolfMass))
-    # plt.suptitle('AverageDistanceyHideAgent={}\nmasterForce={}sheepForce={}wolfMass={}'.format(allAgentNames[manipulatedVariables['hideId'][0]],masterForce,sheepForce,wolfMass))
-    # plt.suptitle('AverageDistanceyHideAgent={}\ndamping={}frictionloss={}masterForce={}'.format(allAgentNames[manipulatedVariables['hideId'][0]],damping,frictionloss,masterForce))
-
-    plt.legend(loc='best')
-    # plt.show()
+    computeStatistics = ComputeStatistics(loadTrajectoriesFromDf, measurementFunction)
+    statisticsDf = toSplitFrame.groupby(levelNames).apply(computeStatistics)
+    print(statisticsDf)
+    #
 
 if __name__ == '__main__':
     main()
