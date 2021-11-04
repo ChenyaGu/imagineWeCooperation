@@ -11,7 +11,7 @@ class NewtonExperiment():
         self.drawImage = drawImage
         self.restImage = restImage
         self.hasRest = hasRest
-    def __call__(self, finishTime, trailCondtions,restDuration):
+    def __call__(self, finishTime, finishEatenNumber, trailCondtions,restDuration):
 
         trialIndex = 0
         score = np.array([0, 0])
@@ -22,11 +22,10 @@ class NewtonExperiment():
             sheepNums = condition['sheepNums']
             initState = self.reset(sheepNums)
             currentStopwatch = 0
-            timeStepforDraw = 0
             print('trial', trialIndex+1)
             print('Number of sheeps:', sheepNums)
-            result, finalState, score, playerScore1, playerScore2, totalScore, currentStopwatch, eatenFlag, timeStepforDraw = self.trial(
-                initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, condition)
+            result, finalState, score, playerScore1, playerScore2, totalScore, currentStopwatch, eatenFlag= self.trial(
+                initState, score, finishTime, finishEatenNumber, currentStopwatch, trialIndex, condition)
             result["sheepNums"] = sheepNums
             result["player1Score"] = str(playerScore1)
             result["player2Score"] = str(playerScore2)

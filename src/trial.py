@@ -11,27 +11,26 @@ import os
 
 
 class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
-    def __init__(self,screen, baselineKillzone,numOfWolves, numOfBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,modelController,getEntityPos,getEntityVel,allSheepPolicy,transit):
+    def __init__(self,screen, baselineKillzone,numOfWolves, numOfBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten,modelController,getEntityPos,getEntityVel,allSheepPolicy,transit):
         self.screen = screen
         self.numOfWolves = numOfWolves
         self.numOfBlocks = numOfBlocks
         self.modelController = modelController
         self.drawNewState = drawNewState
         self.stopwatchEvent = stopwatchEvent
-        self.beanReward = 0.5
-        self.checkEaten = checkEaten
+        self.beanReward = 1
+        self.recordEaten = recordEaten
         self.checkTerminationOfTrial = checkTerminationOfTrial
-        # self.memorySize = 25
         self.baselineKillzone = baselineKillzone
         self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos
         self.getEntityVel = getEntityVel
         self.allSheepPolicy = allSheepPolicy
         self.transit = transit
-    def __call__(self,initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, condition):
+    def __call__(self,initState, score, finishTime, finishEatenNumber, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
         killZone = self.baselineKillzone * condition['killZoneRatio']
-        wolfForce = 5
+        wolfForce = 3
         sheepForce = wolfForce * condition['sheepWolfForceRatio'] 
 
         results = co.OrderedDict()
@@ -63,10 +62,6 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         initialTime = time.get_ticks()
         while pause:
             pg.time.delay(32)
-            # dequeState.append([np.array(targetPositions[0]), (targetPositions[1]), (playerPositions[0]), (playerPositions[1])])
-            # targetPositions, playerPositions, action, currentStopwatch, screen, timeStepforDraw = self.humanController(
-            #     targetPositions, playerPositions, score, currentStopwatch, trialIndex, timeStepforDraw, dequeState,
-            #     sheepNums)
             remainningTime = max(0, finishTime - newStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
@@ -94,13 +89,15 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
             state = nextState
             stateList.append(nextState)
-            eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions,killZone)
+            eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions,killZone)
             pause = self.checkTerminationOfTrial(eatenFlag, currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
 
-        # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
+        results["hunterFlag"] = str(hunterFlag)
+        results["sheepEatenFlag"] = str(eatenFlag)
+        results["sheepEatenNum"] = sum(eatenFlag)
         wolf1Traj=[]
         wolf1Vel=[]
         wolf2Traj=[]
@@ -131,25 +128,16 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         results["player1 vel"] = str(wolf1Vel)
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
-        addSocre = [0, 0]
-        if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
-            results["sheepEaten"] = eatenFlag.index(True) + 1
-            hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
-        elif True in eatenFlag:
-            results["sheepEaten"] = eatenFlag.index(True) + 1
-            hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
-
-        else:
-            results["sheepEaten"] = 0
-        score = np.add(score, addSocre)
+        addScore = [0] * self.numOfWolves
+        if sum(eatenFlag) == finishEatenNumber:
+            hunterId = hunterFlag.index(max(hunterFlag))
+            addScore[hunterId] = self.beanReward
+        score = np.add(score, addScore)
         totalScore = score[0] + score[1]
         playerScore1 = score[0]
         playerScore2 = score[1]
         print(totalScore)
-        return results, nextState, score, playerScore1, playerScore2, totalScore, currentStopwatch, eatenFlag, timeStepforDraw
+        return results, nextState, score, playerScore1, playerScore2, totalScore, currentStopwatch, eatenFlag
 
 
 class NewtonChaseTrialAllCondtionVariouSpeedAndKillZone():
@@ -236,7 +224,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZone():
             state = nextState
             stateList.append(nextState)
             eatenFlag, hunterFlag = self.checkEaten(targetPositions, playerPositions, killZone)
-            pause = self.checkTerminationOfTrial(eatenFlag, currentStopwatch)
+            pause = self.checkTerminationOfTrial(currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
 
@@ -272,20 +260,20 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZone():
         results["player1 vel"] = str(wolf1Vel)
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
-        addSocre = [0, 0]
+        addScore = [0, 0]
         if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
+            # addScore, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addScore[hunterId] = self.beanReward * remainningTime / 1000
         elif True in eatenFlag:
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addScore[hunterId] = self.beanReward * remainningTime / 1000
 
         else:
             results["sheepEaten"] = 0
-        score = np.add(score, addSocre)
+        score = np.add(score, addScore)
         totalScore = score[0] + score[1]
         playerScore1 = score[0]
         playerScore2 = score[1]
@@ -401,20 +389,20 @@ class NewtonChaseTrialAllCondtion():
         results["player1 vel"] = str(wolf1Vel)
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
-        addSocre = [0, 0]
+        addScore = [0, 0]
         if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
+            # addScore, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addScore[hunterId] = self.beanReward * remainningTime / 1000
         elif True in eatenFlag:
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addScore[hunterId] = self.beanReward * remainningTime / 1000
 
         else:
             results["sheepEaten"] = 0
-        score = np.add(score, addSocre)
+        score = np.add(score, addScore)
         totalScore = score[0] + score[1]
         print(totalScore)
         return results, nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
@@ -524,20 +512,20 @@ class NewtonChaseTrial():
         results["player1 vel"] = str(wolf1Vel)
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
-        addSocre = [0, 0]
+        addScore = [0, 0]
         if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
+            # addScore, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addScore[hunterId] = self.beanReward * remainningTime / 1000
         elif True in eatenFlag:
             results["sheepEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward * remainningTime / 1000
+            addScore[hunterId] = self.beanReward * remainningTime / 1000
 
         else:
             results["sheepEaten"] = 0
-        score = np.add(score, addSocre)
+        score = np.add(score, addScore)
         totalScore = score[0] + score[1]
         print(totalScore)
         return results, nextState, score, currentStopwatch, eatenFlag, timeStepforDraw
@@ -600,6 +588,24 @@ def calculateGridDistance(gridA, gridB):
 def isAnyKilled(humanGrids, targetGrid, killzone):
     return np.any(np.array([calculateGridDistance(humanGrid, targetGrid) for humanGrid in humanGrids]) < killzone)
 
+class RecordEatenNumber:
+    def __init__(self, isAnyKilled):
+        self.isAnyKilled = isAnyKilled
+
+    def __call__(self, targetPositions, playerPositions, killzone):
+        eatenFlag = [0] * len(targetPositions)
+        hunterFlag = [0] * len(playerPositions)
+        for (i, targetPosition) in enumerate(targetPositions):
+            if self.isAnyKilled(playerPositions, targetPosition, killzone):
+                eatenFlag[i] += 1
+                break
+        for (i, playerPosition) in enumerate(playerPositions):
+            if self.isAnyKilled(targetPositions, playerPosition, killzone):
+                hunterFlag[i] += 1
+                break
+        return eatenFlag, hunterFlag
+
+
 class CheckEatenVariousKillzone:
     def __init__(self, isAnyKilled):
         self.isAnyKilled = isAnyKilled
@@ -617,31 +623,14 @@ class CheckEatenVariousKillzone:
                 break
         return eatenFlag, hunterFlag
 
-class CheckEaten:
-    def __init__(self, killzone, isAnyKilled):
-        self.killzone = killzone
-        self.isAnyKilled = isAnyKilled
-
-    def __call__(self, targetPositions, playerPositions):
-        eatenFlag = [False] * len(targetPositions)
-        hunterFlag = [False] * len(playerPositions)
-        for (i, targetPosition) in enumerate(targetPositions):
-            if self.isAnyKilled(playerPositions, targetPosition, self.killzone):
-                eatenFlag[i] = True
-                break
-        for (i, playerPosition) in enumerate(playerPositions):
-            if self.isAnyKilled(targetPositions, playerPosition, self.killzone):
-                hunterFlag[i] = True
-                break
-        return eatenFlag, hunterFlag
-
 
 class CheckTerminationOfTrial:
-    def __init__(self, finishTime):
+    def __init__(self, finishTime, finishEatenNumber):
         self.finishTime = finishTime
+        self.finishEatenNumber = finishEatenNumber
 
     def __call__(self, eatenFlag, currentStopwatch):
-        if np.any(eatenFlag) == True or currentStopwatch >= self.finishTime:
+        if sum(eatenFlag) == self.finishEatenNumber or currentStopwatch >= self.finishTime:
             pause = False
         else:
             pause = True
@@ -683,22 +672,22 @@ class Trial():
 
         results = co.OrderedDict()
 
-        addSocre = [0, 0]
+        addScore = [0, 0]
         if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
+            # addScore, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["beanEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addScore[hunterId] = self.beanReward
         elif True in eatenFlag:
             results["beanEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addScore[hunterId] = self.beanReward
 
         else:
             results["beanEaten"] = 0
         # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
-        score = np.add(score, addSocre)
+        score = np.add(score, addScore)
         return traj, targetPositions, playerPositions, score, currentStopwatch, eatenFlag, timeStepforDraw
 
 class TrialServer():
@@ -734,22 +723,22 @@ class TrialServer():
 
         results = co.OrderedDict()
 
-        addSocre = [0, 0]
+        addScore = [0, 0]
         if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
+            # addScore, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["beanEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addScore[hunterId] = self.beanReward
         elif True in eatenFlag:
             results["beanEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addScore[hunterId] = self.beanReward
 
         else:
             results["beanEaten"] = 0
         # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
-        score = np.add(score, addSocre)
+        score = np.add(score, addScore)
         return traj, targetPositions, playerPositions, score, currentStopwatch, eatenFlag, timeStepforDraw
 
 
@@ -808,20 +797,20 @@ class ChaseTrial():
 
         results = co.OrderedDict()
 
-        addSocre = [0, 0]
+        addScore = [0, 0]
         if True in eatenFlag[:2]:
-            # addSocre, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
+            # addScore, timeStepforDraw = self.attributionTrail(eatenFlag, hunterFlag, timeStepforDraw)
             results["beanEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addScore[hunterId] = self.beanReward
         elif True in eatenFlag:
             results["beanEaten"] = eatenFlag.index(True) + 1
             hunterId = hunterFlag.index(True)
-            addSocre[hunterId] = self.beanReward
+            addScore[hunterId] = self.beanReward
 
         else:
             results["beanEaten"] = 0
         # results["firstResponseTime"] = firstResponseTime
         results["trialTime"] = wholeResponseTime
-        score = np.add(score, addSocre)
+        score = np.add(score, addScore)
         return results, targetPositions, playerPositions, score, currentStopwatch, eatenFlag, timeStepforDraw

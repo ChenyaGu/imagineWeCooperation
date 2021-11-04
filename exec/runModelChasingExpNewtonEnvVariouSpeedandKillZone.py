@@ -14,7 +14,7 @@ from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExper
     DrawAttributionTrail, DrawImageWithJoysticksCheck, DrawNewStateWithBlocks
 from src.controller import HumanController, ModelController, JoyStickForceControllers
 from src.writer import WriteDataFrameToCSV
-from src.trial import NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial,CheckEatenVariousKillzone
+from src.trial import NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel, isAnyKilled, CheckTerminationOfTrial, RecordEatenNumber
 from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
@@ -29,7 +29,7 @@ def main():
 
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [4]
-    manipulatedVariables['sheepWolfForceRatio'] = [1]
+    manipulatedVariables['sheepWolfForceRatio'] = [1.3]
     manipulatedVariables['killZoneRatio'] = [1.0]
     trailNumEachCondition = 100
 
@@ -41,9 +41,9 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 1.0
+    mapSize = 2.0
     minDistance = mapSize * 1 / 3
-    sizeRatio = 1.0
+    sizeRatio = 2.0
     wolfSize = 0.075 * sizeRatio
     sheepSize = 0.05 * sizeRatio
     blockSize = 0.2 * sizeRatio
@@ -69,6 +69,7 @@ def main():
 
     stopwatchUnit = 100
     finishTime = 1000 * 60
+    finishEatenNumber = 3
     stopwatchEvent = pg.USEREVENT + 1
 
     # saveImage = False
@@ -200,10 +201,9 @@ def main():
         allSheepPolicy.update({numSheeps: sheepPolicy})
         allWolfPolicy.update({numSheeps: wolfPolicy})
 
-    checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
-    baselineKillzone = 0  # wolfSize + sheepSize
-    checkEaten = CheckEatenVariousKillzone(isAnyKilled)
-    # checkEaten = CheckEaten(killzone, isAnyKilled)
+    checkTerminationOfTrial = CheckTerminationOfTrial(finishTime, finishEatenNumber)
+    baselineKillzone = wolfSize + sheepSize
+    recordEaten = RecordEatenNumber(isAnyKilled)
     # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
     # sheepPolicy = RandomNewtonMovePolicy(numWolves)
     modelController = allWolfPolicy
@@ -211,7 +211,7 @@ def main():
     # drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
-    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel(screen,baselineKillzone, numWolves, numBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
+    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel(screen,baselineKillzone, numWolves, numBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
 
     hasRest = False  # True
     experiment = NewtonExperiment(restImage,hasRest,trial, writer, experimentValues, reset, drawImage)
@@ -221,7 +221,7 @@ def main():
     restDuration = 60
     for i in range(block):
         score = np.array([0, 0])
-        experiment(finishTime, AllConditions,restDuration)
+        experiment(finishTime, finishEatenNumber, AllConditions, restDuration)
         # giveExperimentFeedback(i, score)
         if i == block - 1:
             drawImage(finishImage)
