@@ -11,7 +11,7 @@ import random
 import pygame as pg
 from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, \
-    DrawAttributionTrail, DrawImageWithJoysticksCheck
+    DrawAttributionTrail, DrawImageWithJoysticksCheck, DrawNewStateWithBlocks
 from src.controller import HumanController, ModelController, JoyStickForceControllers
 from src.writer import WriteDataFrameToCSV
 from src.trial import NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel, AttributionTrail, isAnyKilled, CheckEaten, CheckTerminationOfTrial,CheckEatenVariousKillzone
@@ -29,7 +29,7 @@ def main():
 
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [4]
-    manipulatedVariables['sheepWolfForceRatio'] = [1.3]
+    manipulatedVariables['sheepWolfForceRatio'] = [1]
     manipulatedVariables['killZoneRatio'] = [1.0]
     trailNumEachCondition = 100
 
@@ -46,10 +46,10 @@ def main():
     sizeRatio = 1.0
     wolfSize = 0.075 * sizeRatio
     sheepSize = 0.05 * sizeRatio
-    blockSize = 0.0
+    blockSize = 0.2 * sizeRatio
 
-    screenWidth = int(800 * mapSize)
-    screenHeight = int(800 * mapSize)
+    screenWidth = int(800)
+    screenHeight = int(800)
     fullScreen = False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
@@ -57,15 +57,18 @@ def main():
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
     targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
     playerColors = [THECOLORS['blue'], THECOLORS['red']]
+    blockColors = [THECOLORS['white']] * 2
     textColorTuple = THECOLORS['green']
 
     gridSize = 40
     leaveEdgeSpace = 5
-    playerRadius = int(screenWidth/(gridSize+2*leaveEdgeSpace))
-    targetRadius = int(screenWidth/(gridSize+2*leaveEdgeSpace))
+    objectZoomRatio = 10
+    playerRadius = int(wolfSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
+    targetRadius = int(sheepSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
+    blockRadius = int(blockSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
 
     stopwatchUnit = 100
-    finishTime = 1000 * 15
+    finishTime = 1000 * 60
     stopwatchEvent = pg.USEREVENT + 1
 
     # saveImage = False
@@ -91,7 +94,7 @@ def main():
     # finishImage = pg.transform.scale(finishImage, (int(screenWidth * 2 / 3), int(screenHeight / 4)))
 
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
-    drawNewState = DrawNewState(screen, drawBackground, targetColor, playerColors, targetRadius, playerRadius, mapSize)
+    drawNewState = DrawNewStateWithBlocks(screen, drawBackground, targetColor, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize)
     drawImage = DrawImage(screen)
     # totalBarLength = 100
     # barHeight = 20
@@ -118,12 +121,12 @@ def main():
         sheepMaxSpeed = 1.3
         blockMaxSpeed = None
 
-        individualReward = 1
+        individualReward = 0.0
 
         entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
         entitiesMovableList = [True] * numAgents + [False] * numBlocks
         massList = [1.0] * numEntities
-        reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, mapSize, minDistance)
+        reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, numBlocks, mapSize, minDistance)
         # reset = ResetMultiAgentChasingWithVariousSheep(numWolves, numBlocks)
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-mapSize, mapSize], [-mapSize, mapSize])
 
@@ -162,11 +165,14 @@ def main():
             # -----------model--------
             # modelFolderName = os.path.join('individualReward={}'.format(individualReward), 'sheepWolfForceRatio={}_killZoneRatio={}'.format(manipulatedVariables['sheepWolfForceRatio'][0], manipulatedVariables['killZoneRatio'][0]))
             # modelFolderName = os.path.join('maxRange{}'.format(mapSize), 'sizeRatio={}'.format(sizeRatio))
-            modelFolderName = 'maxTimeStep=100'
-            modelSaveName = '{}w{}s'.format(numWolves, numSheeps)
-            maxEpisode = 120000
-            evaluateEpisode = 92000
-            maxTimeStep = 100
+            modelFolderName = 'withoutWall_noBlock'
+            # modelSaveName = '{}w{}s'.format(numWolves, numSheeps)
+            modelSaveName = 'individualReward={}'.format(individualReward)
+            maxEpisode = 60000
+            evaluateEpisode = 60000
+            maxTimeStep = 75
+            modelSheepSpeed = 1.0
+            wolfActCost = 0.0
             buildMADDPGModels = BuildMADDPGModels(actionDim, numAgents, obsShape)
             sheepModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves, numAgents)]
             wolfModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves)]
@@ -174,7 +180,8 @@ def main():
 
             mainModelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
             modelFolder = os.path.join(mainModelFolder, modelSaveName)
-            fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}individ{}_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, individualReward)
+            # fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}individ{}_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, individualReward)
+            fileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost{}individ{}_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed, wolfActCost, individualReward)
             sheepModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in
                                range(numWolves, numAgents)]
             wolfModelPaths = [os.path.join(modelFolder, fileName + str(i) + str(evaluateEpisode) + 'eps') for i in
@@ -204,7 +211,7 @@ def main():
     # drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
-    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel(screen,baselineKillzone, numWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
+    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel(screen,baselineKillzone, numWolves, numBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
 
     hasRest = False  # True
     experiment = NewtonExperiment(restImage,hasRest,trial, writer, experimentValues, reset, drawImage)

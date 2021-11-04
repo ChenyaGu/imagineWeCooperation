@@ -11,9 +11,10 @@ import os
 
 
 class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
-    def __init__(self,screen, baselineKillzone,numOfWolves, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,modelController,getEntityPos,getEntityVel,allSheepPolicy,transit):
+    def __init__(self,screen, baselineKillzone,numOfWolves, numOfBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, checkEaten,modelController,getEntityPos,getEntityVel,allSheepPolicy,transit):
         self.screen = screen
         self.numOfWolves = numOfWolves
+        self.numOfBlocks = numOfBlocks
         self.modelController = modelController
         self.drawNewState = drawNewState
         self.stopwatchEvent = stopwatchEvent
@@ -30,16 +31,17 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
     def __call__(self,initState, score, finishTime, currentStopwatch, trialIndex, timeStepforDraw, condition):
         sheepNums = condition['sheepNums']
         killZone = self.baselineKillzone * condition['killZoneRatio']
-        wolfForce = 1 
+        wolfForce = 5
         sheepForce = wolfForce * condition['sheepWolfForceRatio'] 
 
         results = co.OrderedDict()
-        results["killZoneRatio"]  = condition['killZoneRatio']
-        results["sheepWolfForceRatio"]  = condition['sheepWolfForceRatio']
+        results["killZoneRatio"] = condition['killZoneRatio']
+        results["sheepWolfForceRatio"] = condition['sheepWolfForceRatio']
 
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
         getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves, self.numOfWolves + sheepNums)]
+        getBlockPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves + sheepNums, self.numOfBlocks + self.numOfWolves + sheepNums)]
         # from collections import deque
         # dequeState = deque(maxlen=self.memorySize)
         pause = True
@@ -49,10 +51,12 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         stateList=[]
         initTargetPositions = getTargetPos(initState)
         initPlayerPositions = getPlayerPos(initState)
+        initBlockPositions = getBlockPos(initState)
+        results["blockPositions"] = str(initBlockPositions)
         readyTime = 1500
         while readyTime > 0:
             pg.time.delay(32)
-            self.drawNewState(initTargetPositions, initPlayerPositions, finishTime, currentScore)
+            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, currentScore)
             drawText(self.screen, 'ready',  THECOLORS['white'], (self.screen.get_width()/8*3, self.screen.get_height()/2), 100)
             pg.display.update()
             readyTime -= self.stopwatchUnit
@@ -66,7 +70,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
             remainningTime = max(0, finishTime - newStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            self.drawNewState(targetPositions, playerPositions, remainningTime, currentScore)
+            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, currentScore)
             pg.display.update()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -595,6 +599,7 @@ def calculateGridDistance(gridA, gridB):
 
 def isAnyKilled(humanGrids, targetGrid, killzone):
     return np.any(np.array([calculateGridDistance(humanGrid, targetGrid) for humanGrid in humanGrids]) < killzone)
+
 class CheckEatenVariousKillzone:
     def __init__(self, isAnyKilled):
         self.isAnyKilled = isAnyKilled

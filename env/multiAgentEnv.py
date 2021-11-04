@@ -134,34 +134,40 @@ class RewardSheep:
                     sheepReward -= self.collisionPunishment
             reward.append(sheepReward)
         return reward
+
+
 class ResetMultiAgentNewtonChasingVariousSheep:
-    def __init__(self, numPlayers, mapSize, minDistance):
+    def __init__(self, numWolves, numBlocks, mapSize, minDistance):
         self.positionDimension = 2
-        self.numPlayers = numPlayers
+        self.numWolves = numWolves
+        self.numBlocks = numBlocks
         self.mapSize = mapSize
         self.minDistance = minDistance
 
     def __call__(self, numSheeps):
-        # sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-1, 1,self.positionDimension))]
         sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize, self.mapSize, self.positionDimension))]
 
-
-        initAgentRandomPos = [sampleOneAgentPosition() for ID in range(self.numPlayers)]
-        initAgentZeroVel = lambda: np.zeros(self.positionDimension)
-
+        initWolfRandomPos = [sampleOneAgentPosition() for ID in range(self.numWolves)]
+        initWolfZeroVel = lambda: np.zeros(self.positionDimension)
+        initBlockRandomPos = [sampleOneAgentPosition() for blockID in range(self.numBlocks)]
+        initBlockZeroVel = lambda: np.zeros(self.positionDimension)
         initSheepRandomPos = [sampleOneAgentPosition() for sheepID in range(numSheeps)]
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
+
         for i, sheepPos in enumerate(initSheepRandomPos):
             while np.any(np.array([np.linalg.norm(np.array(agentPos) - np.array(sheepPos)) for agentPos in
-                                   initAgentRandomPos]) < self.minDistance):
+                                   initWolfRandomPos]) < self.minDistance):
                 sheepPos = sampleOneAgentPosition()
             initSheepRandomPos[i] = sheepPos
         agentsState = [state + vel for state, vel in
-                       zip(initAgentRandomPos, [list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
+                       zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
+        blockState = [state + vel for state, vel in
+                       zip(initBlockRandomPos, [list(initBlockZeroVel()) for blockID in range(self.numBlocks)])]
         sheepState = [state + vel for state, vel in
-                      zip(initSheepRandomPos, [list(initSheepRandomVel()) for ID in range(numSheeps)])]
-        state = np.array(agentsState + sheepState)
+                      zip(initSheepRandomPos, [list(initSheepRandomVel()) for sheepID in range(numSheeps)])]
+        state = np.array(agentsState + sheepState + blockState)
         return state
+
 
 class ResetMultiAgentChasingWithVariousSheep:
     def __init__(self, numWolves, numBlocks):
@@ -173,13 +179,13 @@ class ResetMultiAgentChasingWithVariousSheep:
         self.numTotalAgents = self.numWolves + numSheep
         getAgentRandomPos = lambda: np.random.uniform(-1, +1, self.positionDimension)
         getAgentRandomVel = lambda: np.zeros(self.positionDimension)
-        agentsState = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
+        agentsStates = [list(getAgentRandomPos()) + list(getAgentRandomVel()) for ID in range(self.numTotalAgents)]
 
         getBlockRandomPos = lambda: np.random.uniform(-0.9, +0.9, self.positionDimension)
         getBlockSpeed = lambda: np.zeros(self.positionDimension)
 
         blocksState = [list(getBlockRandomPos()) + list(getBlockSpeed()) for blockID in range(self.numBlocks)]
-        state = np.array(agentsState + blocksState)
+        state = np.array(agentsStates + blocksState)
         return state
 
 
@@ -192,25 +198,25 @@ def samplePosition(gridSize, positionDimension):
 
 
 class ResetMultiAgentNewtonChasing:
-    def __init__(self, gridSize, numPlayers, minDistance):
+    def __init__(self, gridSize, numWolves, minDistance):
         self.positionDimension = 2
         self.gridSize = gridSize
-        self.numPlayers = numPlayers
+        self.numWolves = numWolves
         self.minDistance = minDistance
 
     def __call__(self, numSheeps):
-        initAgentRandomPos = [samplePosition(self.gridSize, self.positionDimension) for ID in range(self.numPlayers)]
-        initAgentZeroVel = lambda: np.zeros(self.positionDimension)
+        initWolfRandomPos = [samplePosition(self.gridSize, self.positionDimension) for ID in range(self.numWolves)]
+        initWolfZeroVel = lambda: np.zeros(self.positionDimension)
 
         initSheepRandomPos = [samplePosition(self.gridSize, self.positionDimension) for sheepID in range(numSheeps)]
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
         for i, sheepPos in enumerate(initSheepRandomPos):
             while np.all(np.array([np.linalg.norm(np.array(agentPos) - np.array(sheepPos)) for agentPos in
-                                   initAgentRandomPos]) < self.minDistance):
+                                   initWolfRandomPos]) < self.minDistance):
                 sheepPos = samplePosition(self.gridSize, self.positionDimension)
             initSheepRandomPos[i] = sheepPos
         agentsState = [state + vel for state, vel in
-                       zip(initAgentRandomPos, [list(initAgentZeroVel()) for ID in range(self.numPlayers)])]
+                       zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
         sheepState = [state + vel for state, vel in
                       zip(initSheepRandomPos, [list(initSheepRandomVel()) for ID in range(numSheeps)])]
 
@@ -443,7 +449,7 @@ class ReshapeActionVariousForce:
 class ReshapeHumanAction:
     def __init__(self):
         self.actionDim = 2
-        self.sensitivity = 1
+        self.sensitivity = 5
 
     def __call__(self, action):  # action: tuple of dim (5,1)
         actionX = action[1] - action[2]
@@ -455,7 +461,7 @@ class ReshapeHumanAction:
 class ReshapeSheepAction:
     def __init__(self):
         self.actionDim = 2
-        self.sensitivity = 1.3
+        self.sensitivity = 5
 
     def __call__(self, action):  # action: tuple of dim (5,1)
         actionX = action[1] - action[2]
