@@ -11,7 +11,7 @@ class NewtonExperiment():
         self.drawImage = drawImage
         self.restImage = restImage
         self.hasRest = hasRest
-    def __call__(self, finishTime, finishEatenNumber, trailCondtions,restDuration):
+    def __call__(self, finishTime, trailCondtions,restDuration):
 
         trialIndex = 0
         score = np.array([0, 0])
@@ -25,7 +25,7 @@ class NewtonExperiment():
             print('trial', trialIndex+1)
             print('Number of sheeps:', sheepNums)
             result, finalState, score, playerScore1, playerScore2, totalScore, currentStopwatch, eatenFlag= self.trial(
-                initState, score, finishTime, finishEatenNumber, currentStopwatch, trialIndex, condition)
+                initState, score, finishTime, currentStopwatch, trialIndex, condition)
             result["sheepNums"] = sheepNums
             result["player1Score"] = str(playerScore1)
             result["player2Score"] = str(playerScore2)
@@ -35,7 +35,6 @@ class NewtonExperiment():
             trialIndex += 1
             self.writer(response, trialIndex)
             if np.mod(trialIndex, restDuration) == 0 and self.hasRest and (trialIndex < restDuration*4):
-                # self.darwBackground()
                 self.drawImage(self.restImage)
         # return result
 

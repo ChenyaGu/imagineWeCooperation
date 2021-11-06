@@ -19,16 +19,15 @@ from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 # from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
-from env.multiAgentEnv import StayInBoundaryByReflectVelocity, ResetMultiAgentChasingWithVariousSheep, \
-    TransitMultiAgentChasingForExpVariousForce, ReshapeHumanAction, ReshapeSheepAction, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
-    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe,ReshapeActionVariousForce,ResetMultiAgentNewtonChasingVariousSheep
+from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpVariousForce, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
+    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce, ResetMultiAgentNewtonChasingVariousSheep, RewardWolf, IsCollision
 from collections import OrderedDict
 
 def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepNums'] = [2]
     manipulatedVariables['sheepWolfForceRatio'] = [1.3]
     manipulatedVariables['killZoneRatio'] = [1.0]
     trailNumEachCondition = 100
@@ -43,10 +42,9 @@ def main():
 
     mapSize = 1.0
     minDistance = mapSize * 1 / 3
-    sizeRatio = 1.0
-    wolfSize = 0.075 * sizeRatio
-    sheepSize = 0.05 * sizeRatio
-    blockSize = 0.2 * sizeRatio
+    wolfSize = 0.075
+    sheepSize = 0.05
+    blockSize = 0.2
 
     screenWidth = int(800)
     screenHeight = int(800)
@@ -62,16 +60,11 @@ def main():
 
     gridSize = 40
     leaveEdgeSpace = 5
-    objectZoomRatio = 10
-    # playerRadius = int(wolfSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
-    # targetRadius = int(sheepSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
-    # blockRadius = int(blockSize*objectZoomRatio*screenWidth/(gridSize+2*leaveEdgeSpace))
     playerRadius = int(wolfSize/(mapSize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     targetRadius = int(sheepSize/(mapSize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     blockRadius = int(blockSize/(mapSize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
-    finishTime = 1000 * 60
-    finishEatenNumber = 30
+    finishTime = 1000 * 15
     stopwatchEvent = pg.USEREVENT + 1
 
     # saveImage = False
@@ -106,7 +99,7 @@ def main():
     # saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'), experimentValues["name"])
 
     # --------environment setting-----------
-    numWolves = 2
+    numWolves = 3
     # numSheeps = max(manipulatedVariables['sheepNums'])
     numBlocks = 0
     allSheepPolicy = {}
@@ -168,7 +161,7 @@ def main():
             # -----------model--------
             # modelFolderName = os.path.join('individualReward={}'.format(individualReward), 'sheepWolfForceRatio={}_killZoneRatio={}'.format(manipulatedVariables['sheepWolfForceRatio'][0], manipulatedVariables['killZoneRatio'][0]))
             # modelFolderName = os.path.join('maxRange{}'.format(mapSize), 'sizeRatio={}'.format(sizeRatio))
-            modelFolderName = 'withoutWall_noBlock'
+            modelFolderName = '3wolves0blockSharedReward'
             # modelSaveName = '{}w{}s'.format(numWolves, numSheeps)
             modelSaveName = 'individualReward={}'.format(individualReward)
             maxEpisode = 60000
@@ -203,7 +196,10 @@ def main():
         allSheepPolicy.update({numSheeps: sheepPolicy})
         allWolfPolicy.update({numSheeps: wolfPolicy})
 
-    checkTerminationOfTrial = CheckTerminationOfTrial(finishTime, finishEatenNumber)
+    collisionReward = 1  # it is 10 in the training environment
+    isCollision = IsCollision(getPosFromAgentState)
+    rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision, collisionReward, individualReward)
+    checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
     baselineKillzone = wolfSize + sheepSize
     recordEaten = RecordEatenNumber(isAnyKilled)
     # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
@@ -213,7 +209,7 @@ def main():
     # drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
-    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel(screen,baselineKillzone, numWolves, numBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
+    trial = NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel(screen,baselineKillzone, numWolves, numBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten, rewardWolf, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
 
     hasRest = False  # True
     experiment = NewtonExperiment(restImage,hasRest,trial, writer, experimentValues, reset, drawImage)
@@ -223,7 +219,7 @@ def main():
     restDuration = 60
     for i in range(block):
         score = np.array([0, 0])
-        experiment(finishTime, finishEatenNumber, AllConditions, restDuration)
+        experiment(finishTime, AllConditions, restDuration)
         # giveExperimentFeedback(i, score)
         if i == block - 1:
             drawImage(finishImage)

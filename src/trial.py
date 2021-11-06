@@ -11,8 +11,9 @@ import os
 
 
 class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
-    def __init__(self,screen, baselineKillzone,numOfWolves, numOfBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten,modelController,getEntityPos,getEntityVel,allSheepPolicy,transit):
+    def __init__(self,screen, baselineKillzone,numOfWolves, numOfBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten, rewardWolf, modelController,getEntityPos,getEntityVel,allSheepPolicy,transit):
         self.screen = screen
+        self.baselineKillzone = baselineKillzone
         self.numOfWolves = numOfWolves
         self.numOfBlocks = numOfBlocks
         self.modelController = modelController
@@ -20,18 +21,18 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         self.stopwatchEvent = stopwatchEvent
         self.beanReward = 1
         self.recordEaten = recordEaten
+        self.rewardWolf = rewardWolf
         self.checkTerminationOfTrial = checkTerminationOfTrial
-        self.baselineKillzone = baselineKillzone
         self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos
         self.getEntityVel = getEntityVel
         self.allSheepPolicy = allSheepPolicy
         self.transit = transit
-    def __call__(self,initState, score, finishTime, finishEatenNumber, currentStopwatch, trialIndex, condition):
+    def __call__(self,initState, score, finishTime, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
         killZone = self.baselineKillzone * condition['killZoneRatio']
-        wolfForce = 3
-        sheepForce = wolfForce * condition['sheepWolfForceRatio'] 
+        wolfForce = 2
+        sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
         results["killZoneRatio"] = condition['killZoneRatio']
@@ -41,17 +42,15 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         getPlayerPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves)]
         getTargetPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves, self.numOfWolves + sheepNums)]
         getBlockPos = lambda state: [self.getEntityPos(state,agentId) for agentId in range(self.numOfWolves + sheepNums, self.numOfBlocks + self.numOfWolves + sheepNums)]
-        # from collections import deque
-        # dequeState = deque(maxlen=self.memorySize)
         pause = True
         state = initState
         currentScore = score
-        newStopwatch = currentStopwatch
-        stateList=[]
+        stateList = []
         initTargetPositions = getTargetPos(initState)
         initPlayerPositions = getPlayerPos(initState)
         initBlockPositions = getBlockPos(initState)
-        results["blockPositions"] = str(initBlockPositions)
+        if initBlockPositions:
+            results["blockPositions"] = str(initBlockPositions)
         readyTime = 1500
         while readyTime > 0:
             pg.time.delay(32)
@@ -64,35 +63,34 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         hunterFlag = [0] * len(initPlayerPositions)
         while pause:
             pg.time.delay(32)
-            remainningTime = max(0, finishTime - newStopwatch)
+            remainningTime = max(0, finishTime - currentStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, currentScore)
-            pg.display.update()
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    pause = True
-                    pg.quit()
-                elif event.type == self.stopwatchEvent:
-                    newStopwatch = newStopwatch + self.stopwatchUnit
-            currentStopwatch = newStopwatch
             # wolfPolicy=self.humanController[sheepNums]
-            # humanAction=wolfPolicy(state)
             wolfPolicy = self.modelController[sheepNums]
             humanAction = wolfPolicy(state)
             # action1 = np.array(humanAction[0]) * self.wolfSpeedRatio
             # action2 = np.array(humanAction[1]) * self.wolfSpeedRatio
-            # sheepAction = [np.array(self.chooseGreedyAction(self.sheepPolicy(i, np.array(dequeState) * 10))) / 10 for i in range(sheepNums) ]
             sheepPolicy = self.allSheepPolicy[sheepNums]
             sheepAction = sheepPolicy(state)
             # action = humanAction + sheepAction
             nextState = self.transit(state, humanAction, sheepAction,wolfForce,sheepForce)
             # targetPositions=[self.stayInBoundary(np.add(targetPosition, singleAction))  for (targetPosition,singleAction)  in zip(targetPositions,sheepAction)]
             # playerPositions = [self.stayInBoundary(np.add(playerPosition, action)) for playerPosition, action in zip(playerPositions, [action1, action2])]
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pause = True
+                    pg.quit()
+                elif event.type == self.stopwatchEvent:
+                    currentStopwatch = currentStopwatch + self.stopwatchUnit
+                    addScore = self.rewardWolf(state, humanAction, nextState)
+            score = np.add(score, addScore)
+            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, score)
+            pg.display.update()
             state = nextState
             stateList.append(nextState)
             eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions,killZone,eatenFlag, hunterFlag)
-            pause = self.checkTerminationOfTrial(eatenFlag, currentStopwatch)
+            pause = self.checkTerminationOfTrial(currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
 
@@ -130,11 +128,6 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZoneForModel():
         results["player1 vel"] = str(wolf1Vel)
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
-        addScore = [0] * self.numOfWolves
-        if sum(eatenFlag) == finishEatenNumber:
-            hunterId = hunterFlag.index(max(hunterFlag))
-            addScore[hunterId] = self.beanReward
-        score = np.add(score, addScore)
         totalScore = score[0] + score[1]
         playerScore1 = score[0]
         playerScore2 = score[1]
@@ -153,7 +146,6 @@ class NewtonChaseTrialAllCondtionVariouSpeedAndKillZone():
         self.beanReward = 0.5
         self.checkEaten = checkEaten
         self.checkTerminationOfTrial = checkTerminationOfTrial
-        # self.memorySize = 25
         self.baselineKillzone = baselineKillzone
         self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos
@@ -594,8 +586,7 @@ class RecordEatenNumber:
     def __init__(self, isAnyKilled):
         self.isAnyKilled = isAnyKilled
 
-    def __call__(self, targetPositions, playerPositions, killzone,eatenFlag, hunterFlag):
-
+    def __call__(self, targetPositions, playerPositions, killzone, eatenFlag, hunterFlag):
         for (i, targetPosition) in enumerate(targetPositions):
             if self.isAnyKilled(playerPositions, targetPosition, killzone):
                 eatenFlag[i] += 1
@@ -626,12 +617,11 @@ class CheckEatenVariousKillzone:
 
 
 class CheckTerminationOfTrial:
-    def __init__(self, finishTime, finishEatenNumber):
+    def __init__(self, finishTime):
         self.finishTime = finishTime
-        self.finishEatenNumber = finishEatenNumber
 
-    def __call__(self, eatenFlag, currentStopwatch):
-        if sum(eatenFlag) == self.finishEatenNumber or currentStopwatch >= self.finishTime:
+    def __call__(self, currentStopwatch):
+        if currentStopwatch >= self.finishTime:
             pause = False
         else:
             pause = True

@@ -84,7 +84,6 @@ class RewardWolf:
                 if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
                     reward = [oldReward + sharedRewardForEachAgent for oldReward in reward]
                     reward[rewardID] += individualReward
-
         return reward
 
 
