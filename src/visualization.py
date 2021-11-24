@@ -64,6 +64,8 @@ class DrawBackground():
         self.heightLineStepSpace = np.int(screen.get_height() / (gridSize + 2 * self.leaveEdgeSpace))
         self.backgroundColor = backgroundColor
         self.textColorTuple = textColorTuple
+
+
         self.playerColors = playerColors
 
     def __call__(self, currentTime, currentScore):
@@ -72,12 +74,14 @@ class DrawBackground():
 
         seconds = currentTime / 1000
         drawText(self.screen, 'Time: ' + str("%4.1f" % seconds) + 's', THECOLORS['white'],
-                 (self.widthLineStepSpace * 5, self.leaveEdgeSpace * 4))
+                 (self.widthLineStepSpace * 5, self.widthLineStepSpace), 60)
         # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
         # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
-        drawText(self.screen, 'TotalScore: ' + str(round(currentScore[0] + currentScore[1], 2)), self.textColorTuple,
-                 (self.widthLineStepSpace * 28, self.leaveEdgeSpace * 4))
+        drawText(self.screen, 'TotalScore: ' + str(np.sum(currentScore)), self.textColorTuple,
+                 (self.widthLineStepSpace * 25, self.widthLineStepSpace), 60)
         return
+
+
 
 
 class DrawNewStateWithBlocks():

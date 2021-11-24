@@ -11,6 +11,10 @@ class StayInBoundaryByReflectVelocity():
 
     def __call__(self, position, velocity):
         adjustedX, adjustedY = position
+        # if adjustedX > 1 or adjustedY > 1:
+        #     print("out of boundary!!!")
+        #     print("position",position)
+        #     print(self.xMin)
         adjustedVelX, adjustedVelY = velocity
         if position[0] >= self.xMax:
             adjustedX = 2 * self.xMax - position[0]
@@ -368,6 +372,34 @@ class IntegrateState:
             nextState.append(getNextState(entityNextPos, entityNextVel))
 
         return nextState
+
+
+class TransitMultiAgentChasingForExpWithNoise:
+    def __init__(self, reshapeHumanAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents, noiseAction):
+        self.reshapeHumanAction = reshapeHumanAction
+        self.reshapeSheepAction = reshapeSheepAction
+        self.applyActionForce = applyActionForce
+        self.applyEnvironForce = applyEnvironForce
+        self.integrateState = integrateState
+        self.checkAllAgents = checkAllAgents
+        self.noiseAction = noiseAction
+
+    def __call__(self, state, humanAction, SheepAction,wolfForce,sheepForce):
+        # print(state,actions)
+        humanAction = [self.reshapeHumanAction(action,wolfForce) for action in humanAction]
+        SheepAction = [self.reshapeSheepAction(action,sheepForce) for action in SheepAction]
+        SheepAction = [self.noiseAction(action) for action in SheepAction]
+
+        # actions = [self.reshapeAction(action) for action in actions]
+        actions = humanAction + SheepAction
+        self.numEntities = len(state)
+        p_force = [None] * self.numEntities
+        p_force = self.applyActionForce(p_force, actions)
+        p_force = self.applyEnvironForce(p_force, state)
+        nextState = self.integrateState(p_force, state)
+        nextState = self.checkAllAgents(nextState)
+        return nextState
+
 
 class TransitMultiAgentChasingForExpVariousForce:
     def __init__(self, reshapeHumanAction, reshapeSheepAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents):
