@@ -192,9 +192,10 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         if initBlockPositions:
             results["blockPositions"] = str(initBlockPositions)
         readyTime = 1500
+        currentEatenFlag = [0] * len(initTargetPositions)
         while readyTime > 0:
             pg.time.delay(64)
-            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score)
+            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score,currentEatenFlag)
             drawText(self.screen, 'ready', THECOLORS['white'],
                      (self.screen.get_width() / 8 * 3, self.screen.get_height() / 2), 100)
             pg.display.update()
@@ -217,9 +218,9 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
                     pg.quit()
                 elif event.type == self.stopwatchEvent:
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
-            eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
+            currentEatenFlag,eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
             score = hunterFlag
-            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, score)
+            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, score,currentEatenFlag)
             pg.display.update()
             state = nextState
             stateList.append(nextState)
@@ -594,20 +595,23 @@ def isAnyKilled(humanGrids, targetGrid, killzone):
 
 
 class RecordEatenNumber:
+
     def __init__(self, isAnyKilled):
         self.isAnyKilled = isAnyKilled
 
     def __call__(self, targetPositions, playerPositions, killzone, eatenFlag, hunterFlag):
+        currentEatenFlag = [0] * len(targetPositions)
         for (i, targetPosition) in enumerate(targetPositions):
             if self.isAnyKilled(playerPositions, targetPosition, killzone):
                 eatenFlag[i] += 1
+                currentEatenFlag[i] = 1
                 break
         for (i, playerPosition) in enumerate(playerPositions):
             if self.isAnyKilled(targetPositions, playerPosition, killzone):
                 hunterFlag[i] += 1
                 hunterReward = True
                 break
-        return eatenFlag, hunterFlag
+        return currentEatenFlag,eatenFlag, hunterFlag
 
 
 class CheckEatenVariousKillzone:
