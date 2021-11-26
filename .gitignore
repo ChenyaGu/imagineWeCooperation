@@ -11,3 +11,4 @@ preTrainModel
 trainedModelsMulti
 trainedModelsSingle
 tensorBoard
+.vscode/
