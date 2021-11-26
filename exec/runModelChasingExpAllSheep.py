@@ -155,8 +155,8 @@ def main():
             layerWidth = [128, 128]
 
             # -----------model--------
-            modelFolderName = os.path.join('retrain3wolves', '{}block'.format(numBlocks))
-            # modelFolderName = os.path.join('withoutWall2wolves', '{}block'.format(numBlocks))
+            modelFolderName = 'retrain2wolves'
+            # modelFolderName = 'withoutWall2wolves'
             maxEpisode = 60000
             evaluateEpisode = 60000
             maxTimeStep = 75

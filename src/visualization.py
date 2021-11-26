@@ -155,8 +155,10 @@ class DrawNewState():
                             np.int((mappingFun(playerPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
                            self.playerRadius)
         return self.screen
+
+
 class DrawImageWithJoysticksCheck():
-    def __init__(self, screen,joystickList, waitPress=True, showTime=1000):
+    def __init__(self, screen, joystickList, waitPress=True, showTime=1000):
         self.screen = screen
         self.joystickList = joystickList
         self.screenCenter = (self.screen.get_width() / 2, self.screen.get_height() / 2)
@@ -170,14 +172,14 @@ class DrawImageWithJoysticksCheck():
         self.screen.fill((0, 0, 0))
         self.screen.blit(image, imageRect)
         pg.display.flip()
-        pauseList = [True,True]
+        pauseList = [True] * len(self.joystickList)
         if self.waitPress:
             while np.any(pauseList):
                 pg.time.wait(10)
                 for event in pg.event.get(): # User did something
                     if event.type == pg.QUIT: # If user clicked close
-                        pauseList =[False , False] # Flag that we are done so we exit this loop
-                for joystickId,joystick in enumerate(self.joystickList):
+                        pauseList = [False] * len(self.joystickList)  # Flag that we are done so we exit this loop
+                for joystickId, joystick in enumerate(self.joystickList):
                     joystick.init()
                     value = joystick.get_button(0)
                     # print(value)

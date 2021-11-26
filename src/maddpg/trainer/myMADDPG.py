@@ -15,7 +15,7 @@ class BuildMADDPGModels:
         self.gradNormClipping = 0.5
 
     def __call__(self, layersWidths, agentID):
-        agentStr = 'Agent'+ str(agentID)
+        agentStr = 'Agent' + str(agentID)
         graph = tf.Graph()
         with graph.as_default():
             with tf.variable_scope("inputs/"+ agentStr):

@@ -165,17 +165,17 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
 
     def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
-        sheepConcern = condition['sheepConcern']
-        if sheepConcern == 'selfSheep':
-            numSheepToObserve = 1
-        else:
-            numSheepToObserve = sheepNums
+        # sheepConcern = condition['sheepConcern']
+        # if sheepConcern == 'selfSheep':
+        #     numSheepToObserve = 1
+        # else:
+        #     numSheepToObserve = sheepNums
         killZone = self.killzone
         wolfForce = 5
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
-        results["sheepConcern"] = condition['sheepConcern']
+        # results["sheepConcern"] = condition['sheepConcern']
 
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state, agentId) for agentId in range(self.numOfWolves)]
@@ -208,7 +208,8 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
             humanAction = self.humanController()
-            sheepPolicy = self.allSheepPolicy[sheepNums, numSheepToObserve]
+            sheepPolicy = self.allSheepPolicy[sheepNums]
+            # sheepPolicy = self.allSheepPolicy[sheepNums, numSheepToObserve]
             sheepAction = sheepPolicy(state)
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
             for event in pg.event.get():
@@ -256,21 +257,24 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         roundFunc = lambda x: round(x, 2)
         wolf1Traj = [list(map(roundFunc, i)) for i in wolf1Traj]
         wolf2Traj = [list(map(roundFunc, i)) for i in wolf2Traj]
-        wolf3Traj = [list(map(roundFunc, i)) for i in wolf3Traj]
         sheepTraj = [list(map(roundFunc, i)) for i in sheepTraj]
         wolf1Vel = [list(map(roundFunc, i)) for i in wolf1Vel]
         wolf2Vel = [list(map(roundFunc, i)) for i in wolf2Vel]
-        wolf3Vel = [list(map(roundFunc, i)) for i in wolf3Vel]
         sheepVel = [list(map(roundFunc, i)) for i in sheepVel]
 
         results["player1 traj"] = str(wolf1Traj)
         results["player2 traj"] = str(wolf2Traj)
-        results["player3 traj"] = str(wolf3Traj)
         results["sheeps traj"] = str(sheepTraj)
         results["player1 vel"] = str(wolf1Vel)
         results["player2 vel"] = str(wolf2Vel)
-        results["player3 vel"] = str(wolf3Vel)
         results["sheeps vel"] = str(sheepVel)
+
+        if self.numOfWolves == 3:
+            wolf3Traj = [list(map(roundFunc, i)) for i in wolf3Traj]
+            wolf3Vel = [list(map(roundFunc, i)) for i in wolf3Vel]
+            results["player3 traj"] = str(wolf3Traj)
+            results["player3 vel"] = str(wolf3Vel)
+
         totalScore = np.sum(score)
         print(totalScore)
         return results, nextState, score, totalScore, currentStopwatch, eatenFlag
