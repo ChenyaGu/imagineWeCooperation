@@ -55,7 +55,7 @@ def main():
 
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
     targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
-    playerColors = [THECOLORS['blue3'], THECOLORS['red3'], THECOLORS['green3']]
+    playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]
     blockColors = [THECOLORS['white']] * 2
     textColorTuple = THECOLORS['green']
 

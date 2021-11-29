@@ -11,8 +11,8 @@ class NewtonExperiment():
         self.drawImage = drawImage
         self.restImage = restImage
         self.hasRest = hasRest
-    def __call__(self, finishTime, trailCondtions, restDuration):
 
+    def __call__(self, finishTime, trailCondtions, restTimes):
         trialIndex = 0
         score = np.array([0]*self.experimentValues["numWolves"])
         # for trialIndex in range(len(trailCondtions)):
@@ -31,7 +31,8 @@ class NewtonExperiment():
             response.update(result)
             trialIndex += 1
             self.writer(response, trialIndex)
-            if np.mod(trialIndex, restDuration) == 0 and self.hasRest and (trialIndex < restDuration*4):
+            totalTrialNum = len(trailCondtions)
+            if np.mod(trialIndex, totalTrialNum/restTimes) == 0 and self.hasRest and (trialIndex < totalTrialNum):
                 self.drawImage(self.restImage)
         # return result
 

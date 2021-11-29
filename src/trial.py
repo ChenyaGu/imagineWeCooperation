@@ -30,17 +30,17 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
 
     def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
-        sheepConcern = condition['sheepConcern']
-        if sheepConcern == 'selfSheep':
-            numSheepToObserve = 1
-        else:
-            numSheepToObserve = sheepNums
+        # sheepConcern = condition['sheepConcern']
+        # if sheepConcern == 'selfSheep':
+        #     numSheepToObserve = 1
+        # else:
+        #     numSheepToObserve = sheepNums
         killZone = self.killzone
-        wolfForce = 5
+        wolfForce = 3
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
-        results["sheepConcern"] = condition['sheepConcern']
+        # results["sheepConcern"] = condition['sheepConcern']
 
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state, agentId) for agentId in range(self.numOfWolves)]
@@ -57,9 +57,10 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         if initBlockPositions:
             results["blockPositions"] = str(initBlockPositions)
         readyTime = 1500
+        currentEatenFlag = [0] * len(initTargetPositions)
         while readyTime > 0:
             pg.time.delay(64)
-            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score)
+            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
             drawText(self.screen, 'ready', THECOLORS['white'],
                      (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
             pg.display.update()
@@ -72,9 +73,9 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
             remainningTime = max(0, finishTime - currentStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            wolfPolicy = self.modelController[sheepNums, numSheepToObserve]
+            wolfPolicy = self.modelController[sheepNums]
             humanAction = wolfPolicy(state)
-            sheepPolicy = self.allSheepPolicy[sheepNums, numSheepToObserve]
+            sheepPolicy = self.allSheepPolicy[sheepNums]
             sheepAction = sheepPolicy(state)
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
             for event in pg.event.get():
@@ -83,9 +84,9 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
                     pg.quit()
                 elif event.type == self.stopwatchEvent:
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
-            eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
+            currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
             score = hunterFlag
-            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, score)
+            self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
             pg.display.update()
             state = nextState
             stateList.append(nextState)
@@ -171,7 +172,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         # else:
         #     numSheepToObserve = sheepNums
         killZone = self.killzone
-        wolfForce = 5
+        wolfForce = 3
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
@@ -195,7 +196,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         currentEatenFlag = [0] * len(initTargetPositions)
         while readyTime > 0:
             pg.time.delay(64)
-            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score,currentEatenFlag)
+            self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
             drawText(self.screen, 'ready', THECOLORS['white'],
                      (self.screen.get_width() / 8 * 3, self.screen.get_height() / 2), 100)
             pg.display.update()

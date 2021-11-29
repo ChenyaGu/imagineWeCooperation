@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as ss
 
 getPosFromAgentState = lambda state: np.array([state[0], state[1]])
 getVelFromAgentState = lambda agentState: np.array([agentState[2], agentState[3]])
@@ -390,7 +391,6 @@ class TransitMultiAgentChasingForExpWithNoise:
         SheepAction = [self.reshapeSheepAction(action,sheepForce) for action in SheepAction]
         SheepAction = [self.noiseAction(action) for action in SheepAction]
 
-        # actions = [self.reshapeAction(action) for action in actions]
         actions = humanAction + SheepAction
         self.numEntities = len(state)
         p_force = [None] * self.numEntities
@@ -411,10 +411,9 @@ class TransitMultiAgentChasingForExpVariousForce:
         self.checkAllAgents = checkAllAgents
 
     def __call__(self, state, humanAction, SheepAction,wolfForce,sheepForce):
-        # print(state,actions)
         humanAction = [self.reshapeHumanAction(action,wolfForce) for action in humanAction]
         SheepAction = [self.reshapeSheepAction(action,sheepForce) for action in SheepAction]
-        # actions = [self.reshapeAction(action) for action in actions]
+
         actions = humanAction + SheepAction
         self.numEntities = len(state)
         p_force = [None] * self.numEntities
@@ -499,3 +498,15 @@ class ReshapeSheepAction:
         actionY = action[3] - action[4]
         actionReshaped = np.array([actionX, actionY]) * self.sensitivity
         return actionReshaped
+
+
+class BuildGaussianFixCov:
+        def __init__(self, cov):
+            self.cov = cov
+
+        def __call__(self, mean):
+            return ss.multivariate_normal(mean, self.cov)
+
+
+def sampleFromContinuousSpace(distribution):
+        return distribution.rvs()

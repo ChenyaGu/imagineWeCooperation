@@ -85,7 +85,7 @@ class DrawBackground():
 
 
 class DrawNewStateWithBlocks():
-    def __init__(self, screen, drawBackground, targetColors, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize,catchColor = [THECOLORS['yellow']]):
+    def __init__(self, screen, drawBackground, targetColors, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor=[THECOLORS['yellow']]):
         self.screen = screen
         self.drawBackground = drawBackground
         self.targetColors = targetColors
@@ -102,11 +102,11 @@ class DrawNewStateWithBlocks():
     def __call__(self, targetPositions, playerPositions,blockPositions,currentTime, currentScore,currentEatenFlag):
         self.drawBackground(currentTime, currentScore)
         mappingFun = lambda x: (x + self.mapSize)*(self.drawBackground.gridSize/(2*self.mapSize))  # mapping mapSize[-1,1] to gridSize[0,40]
-         
-        for i,targetPosition in enumerate(targetPositions):
-            if currentEatenFlag[i] :
-                targetColor = self.catchColor
-            else :
+
+        for i, targetPosition in enumerate(targetPositions):
+            if currentEatenFlag[i]:
+                targetColor = self.catchColor[0]
+            else:
                 targetColor = self.targetColors[i]
             pg.draw.circle(self.screen, targetColor,
                            [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
@@ -127,7 +127,7 @@ class DrawNewStateWithBlocks():
         return self.screen
 
 class DrawNewState():
-    def __init__(self, screen, drawBackground, targetColors, playerColors, targetRadius, playerRadius, mapSize,catchColor = [THECOLORS['yellow']]):
+    def __init__(self, screen, drawBackground, targetColors, playerColors, targetRadius, playerRadius, mapSize):
         self.screen = screen
         self.drawBackground = drawBackground
         self.targetColors = targetColors

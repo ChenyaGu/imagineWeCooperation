@@ -12,7 +12,6 @@ import pygame as pg
 from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, \
     DrawAttributionTrail, DrawImageWithJoysticksCheck, DrawNewStateWithBlocks
-from src.controller import HumanController, ModelController, JoyStickForceControllers
 from src.writer import WriteDataFrameToCSV
 from src.trial import NewtonChaseTrialAllCondtionVariouSpeedForModel, isAnyKilled, CheckTerminationOfTrial, RecordEatenNumber
 from src.experiment import NewtonExperiment
@@ -20,18 +19,8 @@ from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPoli
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 # from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpWithNoise, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
-    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce, ResetMultiAgentNewtonChasingVariousSheep, RewardWolf, IsCollision
+    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce ,ResetMultiAgentNewtonChasingVariousSheep, BuildGaussianFixCov, sampleFromContinuousSpace
 from collections import OrderedDict
-import scipy.stats as ss
-
-class BuildGaussianFixCov:
-    def __init__(self, cov):
-        self.cov = cov
-    def __call__(self, mean):
-        return ss.multivariate_normal(mean, self.cov)
-
-def sampleFromContinuousSpace(distribution):
-    return distribution.rvs()
 
 
 def main():
@@ -65,7 +54,7 @@ def main():
 
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
     targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
-    playerColors = [THECOLORS['blue3'], THECOLORS['red3'], THECOLORS['green3']]
+    playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]
     blockColors = [THECOLORS['white']] * 2
     textColorTuple = THECOLORS['green']
 
@@ -100,14 +89,10 @@ def main():
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, targetColor, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
     drawImage = DrawImage(screen)
-    # totalBarLength = 100
-    # barHeight = 20
-    # screenCenter = [screenWidth / 2, screenHeight / 2]
-    # drawAttributionTrail = DrawAttributionTrail(screen, playerColors, totalBarLength, barHeight, screenCenter)
-    # saveImageDir = os.path.join(os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'data'), experimentValues["name"])
 
     # --------environment setting-----------
     numWolves = 3
+    experimentValues["numWolves"] = numWolves
     numBlocks = 0
     allSheepPolicy = {}
     allWolfPolicy = {}
@@ -124,13 +109,10 @@ def main():
         sheepMaxSpeed = 1.3
         blockMaxSpeed = None
 
-        individualReward = 0.0
-
         entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
         entitiesMovableList = [True] * numAgents + [False] * numBlocks
         massList = [1.0] * numEntities
         reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, numBlocks, mapSize, minDistance)
-        # reset = ResetMultiAgentChasingWithVariousSheep(numWolves, numBlocks)
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize], [-displaySize, displaySize])
 
         def checkBoudary(agentState):
@@ -149,11 +131,10 @@ def main():
                                         getVelFromAgentState, getPosFromAgentState)
         actionDimReshaped = 2
         cov = [3 ** 2 for _ in range(actionDimReshaped)]
-        # buildGaussian = lambda a: a
         buildGaussian = BuildGaussianFixCov(cov)
         noiseAction = lambda state: sampleFromContinuousSpace(buildGaussian(tuple(state)))
         transit = TransitMultiAgentChasingForExpWithNoise(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents, noiseAction)
-        # transit = TransitMultiAgentChasingForExp(reshapeHumanAction, reshapeSheepAction, applyActionForce,applyEnvironForce, integrateState, checkAllAgents)
+
         def loadPolicyOneCondition(numSheeps):
             # -----------observe--------
             numSheepToObserve = 1
@@ -182,7 +163,7 @@ def main():
             layerWidth = [128, 128]
 
             # -----------model--------
-            modelFolderName = 'retrain2wolves'
+            modelFolderName = 'retrain3wolves'
             # modelFolderName = 'withoutWall2wolves'
             maxEpisode = 60000
             evaluateEpisode = 60000
