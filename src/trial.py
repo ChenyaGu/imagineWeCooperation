@@ -36,7 +36,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         # else:
         #     numSheepToObserve = sheepNums
         killZone = self.killzone
-        wolfForce = 3
+        wolfForce = 5
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
@@ -59,7 +59,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         readyTime = 1500
         currentEatenFlag = [0] * len(initTargetPositions)
         while readyTime > 0:
-            pg.time.delay(64)
+            pg.time.delay(32)
             self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
             drawText(self.screen, 'ready', THECOLORS['white'],
                      (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
@@ -69,7 +69,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         eatenFlag = [0] * len(initTargetPositions)
         hunterFlag = score
         while pause:
-            pg.time.delay(64)
+            pg.time.delay(32)
             remainningTime = max(0, finishTime - currentStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
@@ -192,10 +192,10 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         initBlockPositions = getBlockPos(initState)
         if initBlockPositions:
             results["blockPositions"] = str(initBlockPositions)
-        readyTime = 1500
+        readyTime = 1000
         currentEatenFlag = [0] * len(initTargetPositions)
         while readyTime > 0:
-            pg.time.delay(64)
+            pg.time.delay(32)
             self.drawNewState(initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
             drawText(self.screen, 'ready', THECOLORS['white'],
                      (self.screen.get_width() / 8 * 3, self.screen.get_height() / 2), 100)
@@ -205,7 +205,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         eatenFlag = [0] * len(initTargetPositions)
         hunterFlag = score
         while pause:
-            pg.time.delay(64)
+            pg.time.delay(32)
             remainningTime = max(0, finishTime - currentStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)

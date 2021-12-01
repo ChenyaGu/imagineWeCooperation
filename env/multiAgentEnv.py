@@ -334,7 +334,7 @@ class ApplyEnvironForce:
 
 class IntegrateState:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState,
-                 getPosFromAgentState, damping=0.25, dt=0.1):
+                 getPosFromAgentState, damping=0.25, dt=0.07):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping

@@ -26,9 +26,10 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    manipulatedVariables['sheepNums'] = [2]
     manipulatedVariables['sheepWolfForceRatio'] = [1.3]
-    manipulatedVariables['sheepConcern'] = ['selfSheep', 'allSheep']
+    manipulatedVariables['sheepConcern'] = ['allSheep']
+    # manipulatedVariables['sheepConcern'] = ['selfSheep', 'allSheep']
     trailNumEachCondition = 30
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -64,7 +65,7 @@ def main():
     targetRadius = int(sheepSize / (displaySize * 2) * screenWidth * gridSize / (gridSize + 2 * leaveEdgeSpace))
     blockRadius = int(blockSize / (displaySize * 2) * screenWidth * gridSize / (gridSize + 2 * leaveEdgeSpace))
     stopwatchUnit = 100
-    finishTime = 1000 * 15
+    finishTime = 1000 * 30
     stopwatchEvent = pg.USEREVENT + 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)
@@ -87,7 +88,7 @@ def main():
     drawImage = DrawImage(screen)
 
     # --------environment setting-----------
-    numWolves = 2
+    numWolves = 3
     experimentValues["numWolves"] = numWolves
     numBlocks = 0
     allSheepPolicy = {}
@@ -128,7 +129,7 @@ def main():
                                             getVelFromAgentState, getPosFromAgentState)
 
             actionDimReshaped = 2
-            cov = [3 ** 2 for _ in range(actionDimReshaped)]
+            cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
             buildGaussian = BuildGaussianFixCov(cov)
             noiseAction = lambda state: sampleFromContinuousSpace(buildGaussian(tuple(state)))
             transit = TransitMultiAgentChasingForExpWithNoise(reShapeAction, reShapeAction, applyActionForce,
@@ -155,7 +156,9 @@ def main():
 
                 # -----------model--------
                 # modelFolderName = 'retrain3wolves'
-                modelFolderName = 'withoutWall2wolves'
+                # modelFolderName = 'withoutWall2wolves'
+                modelFolderName = 'withoutWall3wolves'
+
                 maxEpisode = 60000
                 evaluateEpisode = 60000
                 maxTimeStep = 75
@@ -165,8 +168,8 @@ def main():
                                    range(numWolves, numWolves + numSheepToObserve)]
 
                 modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
-               # sheepFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
-                sheepFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ0.0_agent".format(
+                # sheepFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+                sheepFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(
                     numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepModelPaths = [os.path.join(modelFolder, sheepFileName + str(i) + str(evaluateEpisode) + 'eps') for i
                                    in range(numWolves, numWolves + numSheepToObserve)]
