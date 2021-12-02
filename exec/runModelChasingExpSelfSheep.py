@@ -53,7 +53,8 @@ def main():
     screen = initializeScreen()
 
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
-    targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
+    targetColor = [THECOLORS['orange1'], THECOLORS['orange2'],THECOLORS['orange3'],THECOLORS['orange4']]  # [255, 50, 50]
+    # targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
     playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]
     blockColors = [THECOLORS['white']] * 2
     textColorTuple = THECOLORS['green']
@@ -130,7 +131,7 @@ def main():
         integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
                                         getVelFromAgentState, getPosFromAgentState)
         actionDimReshaped = 2
-        cov = [3 ** 2 for _ in range(actionDimReshaped)]
+        cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
         buildGaussian = BuildGaussianFixCov(cov)
         noiseAction = lambda state: sampleFromContinuousSpace(buildGaussian(tuple(state)))
         transit = TransitMultiAgentChasingForExpWithNoise(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents, noiseAction)

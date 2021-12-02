@@ -30,7 +30,7 @@ def main():
 
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1]
-    manipulatedVariables['sheepWolfForceRatio'] = [1.3]
+    manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     trailNumEachCondition = 20
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -145,14 +145,24 @@ def main():
             numSheepToObserve = 1
             wolvesIDForSheepObserve = list(range(numWolves))
             sheepsIDForSheepObserve = list(range(numWolves, numSheepToObserve + numWolves))
-            blocksIDForSheepObserve = list(
-                range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
+            blocksIDForSheepObserve = list(range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
             observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId,
                                                                     blocksIDForSheepObserve,
                                                                     getPosFromAgentState, getVelFromAgentState)
+
+
             observeOneAgentForSheep = ft.partial(observeOneAgentForSheep1, sId=sheepsIDForSheepObserve)
             observeOneForSheep = lambda state, num: [observeOneAgentForSheep(agentID)(state) for agentID in range(num)]
             sheepObserve = ft.partial(observeOneForSheep, num=numWolves + numSheepToObserve)
+            sheepObsList = []
+            for sheepId in sheepsID:
+                obsFunList = [Observe(agentID, wolvesIDForSheepObserve, [sheepId], blocksIDForSheepObserve, getPosFromAgentState,
+                            getVelFromAgentState) for agentID in list(range(numWolves)) + [sheepId]]
+                sheepObsLambda = lambda state, obsList: list([obs(state) for obs in obsList])
+                sheepObs = ft.partial(sheepObsLambda, obsList=obsFunList)
+                sheepObsList.append(sheepObs)
+            # sheepObsList =[lambda state: [observeOneAgentForSheep1(agentID,[sheepId])(state) for agentID in list(range(numWolves))+[sheepId] ]for sheepId in sheepsID]
+            # sheepObserve = ft.partial(observeOneForSheep, num=numWolves + numSheepToObserve)
             initSheepObsForParams = sheepObserve(reset(numSheepToObserve))
             obsSheepShape = [initSheepObsForParams[obsID].shape[0] for obsID in range(len(initSheepObsForParams))]
 
@@ -169,22 +179,22 @@ def main():
             modelSheepSpeed = 1.0
             buildSheepMADDPGModels = BuildMADDPGModels(actionDim, numWolves + numSheepToObserve, obsSheepShape)
             sheepModelsList = [buildSheepMADDPGModels(layerWidth, agentID) for agentID in
-                               range(numWolves, numWolves + numSheepToObserve) for i in range(1)]
+                               range(numWolves, numWolves + numSheepToObserve) for i in range(numSheeps)]
             modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
             sheepFileName = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves,
                                                                                                            numBlocks,
                                                                                                            maxEpisode,
                                                                                                            maxTimeStep,
                                                                                                            modelSheepSpeed)
-            sheepModelPaths = [os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileName + str(evaluateEpisode) + 'eps')
-                            for i in range(3,3+numSheeps)]
+            sheepModelPaths = [os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileName + str(evaluateEpisode) + 'eps') for i in range(numSheeps)]
             [restoreVariables(model, path) for model, path in zip(sheepModelsList, sheepModelPaths)]
 
             actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-            sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for
-                                                           model in sheepModelsList]
-            sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+            sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsList)])
+            # sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsList]
+            # sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+            sheepPolicyOneCondition = sheepPolicyFun
             return sheepPolicyOneCondition
 
         sheepPolicy = loadPolicyOneCondition(numSheeps)

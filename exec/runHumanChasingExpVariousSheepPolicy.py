@@ -26,9 +26,9 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [2]
+    manipulatedVariables['sheepNums'] = [2,4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.3]
-    manipulatedVariables['sheepConcern'] = ['allSheep']
+    manipulatedVariables['sheepConcern'] = ['selfSheep']
     # manipulatedVariables['sheepConcern'] = ['selfSheep', 'allSheep']
     trailNumEachCondition = 30
 

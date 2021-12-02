@@ -159,7 +159,7 @@ def main():
                 layerWidth = [128, 128]
 
                 # -----------model--------
-                modelFolderName = 'retrain2wolves'
+                modelFolderName = 'retrain3wolves'
                 # modelFolderName = 'withoutWall2wolves'
                 maxEpisode = 60000
                 evaluateEpisode = 60000
