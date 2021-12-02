@@ -17,7 +17,6 @@ from src.trial import NewtonChaseTrialAllCondtionVariouSpeedForModel, isAnyKille
 from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
-# from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpWithNoise, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
     IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce ,ResetMultiAgentNewtonChasingVariousSheep, BuildGaussianFixCov, sampleFromContinuousSpace
 from collections import OrderedDict
@@ -27,7 +26,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    manipulatedVariables['sheepNums'] = [4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.3]
     trailNumEachCondition = 10
 
@@ -53,7 +52,7 @@ def main():
     screen = initializeScreen()
 
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
-    targetColor = [THECOLORS['orange1'], THECOLORS['orange2'],THECOLORS['orange3'],THECOLORS['orange4']]  # [255, 50, 50]
+    targetColor = [THECOLORS['orange'], THECOLORS['orange1'],THECOLORS['orange2'],THECOLORS['orange3']]  # [255, 50, 50]
     # targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
     playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]
     blockColors = [THECOLORS['white']] * 2
@@ -72,11 +71,7 @@ def main():
     pg.event.set_allowed([pg.KEYDOWN, pg.QUIT, stopwatchEvent])
     pg.key.set_repeat(120, 120)
     picturePath = os.path.abspath(os.path.join(os.path.join(dirName, '..'), 'pictures'))
-    # resultsPath = os.path.abspath(os.path.join(os.path.join(os.getcwd(), os.pardir), 'results'))
-
     resultsDicPath = os.path.join(dirName, '..', 'results')
-    # resultsDicPath = posixpath.join(dirName, '..', 'results')
-
     
     # experimentValues["name"] = '0704'
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
@@ -199,14 +194,10 @@ def main():
         allSheepPolicy.update({numSheeps: sheepPolicy})
         allWolfPolicy.update({numSheeps: wolfPolicy})
 
-    # collisionReward = 1  # it is 10 in the training environment
-    # isCollision = IsCollision(getPosFromAgentState)
-    # rewardWolf = RewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision, collisionReward,individualReward)
+
     checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
     killzone = wolfSize + sheepSize
     recordEaten = RecordEatenNumber(isAnyKilled)
-    # attributionTrail = AttributionTrail(totalScore, saveImageDir, saveImage, drawAttributionTrail)
-    # sheepPolicy = RandomNewtonMovePolicy(numWolves)
     modelController = allWolfPolicy
     # humanController = JoyStickForceControllers()
     # drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
