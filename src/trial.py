@@ -176,6 +176,8 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
+        pickleResults = co.OrderedDict()
+        pickleResults['condition'] = condition
         # results["sheepConcern"] = condition['sheepConcern']
 
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
@@ -187,6 +189,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         pause = True
         state = initState
         stateList = []
+        trajectory = []
         initTargetPositions = getTargetPos(initState)
         initPlayerPositions = getPlayerPos(initState)
         initBlockPositions = getBlockPos(initState)
@@ -224,12 +227,14 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
             score = hunterFlag
             self.drawNewState(targetPositions, playerPositions, initBlockPositions, remainningTime, score,currentEatenFlag)
             pg.display.update()
+            action = humanAction + sheepAction
+            trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)
             pause = self.checkTerminationOfTrial(currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
-
+        pickleResults['trajectory'] = trajectory
         results["trialTime"] = wholeResponseTime
         results["hunterFlag"] = str(hunterFlag)
         results["sheepEatenFlag"] = str(eatenFlag)
