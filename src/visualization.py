@@ -2,7 +2,7 @@ import pygame as pg
 import numpy as np
 import os
 from pygame.color import THECOLORS
-
+import random
 
 def calculateIncludedAngle(vector1, vector2):
     includedAngle = abs(np.angle(complex(vector1[0], vector1[1]) / complex(vector2[0], vector2[1])))
@@ -85,10 +85,9 @@ class DrawBackground():
 
 
 class DrawNewStateWithBlocks():
-    def __init__(self, screen, drawBackground, targetColors, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor=[THECOLORS['yellow']]):
+    def __init__(self, screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor=[THECOLORS['yellow']]):
         self.screen = screen
         self.drawBackground = drawBackground
-        self.targetColors = targetColors
         self.playerColors = playerColors
         self.blockColors = blockColors
         self.targetRadius = targetRadius
@@ -99,15 +98,14 @@ class DrawNewStateWithBlocks():
         self.widthLineStepSpace = drawBackground.widthLineStepSpace
         self.heightLineStepSpace = drawBackground.heightLineStepSpace
         self.catchColor = catchColor
-    def __call__(self, targetPositions, playerPositions,blockPositions,currentTime, currentScore,currentEatenFlag):
+    def __call__(self, targetColors, targetPositions, playerPositions,blockPositions,currentTime, currentScore,currentEatenFlag):
         self.drawBackground(currentTime, currentScore)
         mappingFun = lambda x: (x + self.mapSize)*(self.drawBackground.gridSize/(2*self.mapSize))  # mapping mapSize[-1,1] to gridSize[0,40]
-
         for i, targetPosition in enumerate(targetPositions):
             if currentEatenFlag[i]:
                 targetColor = self.catchColor[0]
             else:
-                targetColor = self.targetColors[i]
+                targetColor = targetColors[i]
             pg.draw.circle(self.screen, targetColor,
                            [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
                             np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],

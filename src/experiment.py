@@ -1,11 +1,13 @@
+import pickle
 import numpy as np
 import pandas as pd
 
 
 class NewtonExperiment():
-    def __init__(self,restImage,hasRest, trial, writer, experimentValues, reset, drawImage):
+    def __init__(self,restImage,hasRest, trial, writer,pickleWriter, experimentValues, reset, drawImage):
         self.trial = trial
         self.writer = writer
+        self.pickleWriter = pickleWriter
         self.experimentValues = experimentValues
         self.reset = reset
         self.drawImage = drawImage
@@ -16,6 +18,7 @@ class NewtonExperiment():
         trialIndex = 0
         score = np.array([0]*self.experimentValues["numWolves"])
         # for trialIndex in range(len(trailCondtions)):
+        pickleDataList = []
         for condition in trailCondtions:
             # condition = trailCondtions[trialIndex]
             print('trial', trialIndex + 1)
@@ -23,19 +26,21 @@ class NewtonExperiment():
             sheepNums = condition['sheepNums']
             initState = self.reset(sheepNums)
             currentStopwatch = 0
-            result, finalState, score, totalScore, currentStopwatch, eatenFlag = self.trial(
+            pickleResult,result, finalState, score, totalScore, currentStopwatch, eatenFlag = self.trial(
                 initState, score, finishTime, currentStopwatch, trialIndex, condition)
             result["sheepNums"] = sheepNums
             result["totalScore"] = str(totalScore)
+            pickleResult['trialIndex']=trialIndex
             response = self.experimentValues.copy()
             response.update(result)
+            pickleDataList.append(pickleResult)
             trialIndex += 1
             self.writer(response, trialIndex)
+
             totalTrialNum = len(trailCondtions)
             if np.mod(trialIndex, totalTrialNum/restTimes) == 0 and self.hasRest and (trialIndex < totalTrialNum):
                 self.drawImage(self.restImage)
-        # return result
-
+        self.pickleWriter(pickleDataList)
 class Experiment():
     def __init__(self, trial, writer, experimentValues, initialWorld, updateWorld, drawImage, resultsPath):
         self.trial = trial
