@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	csvName = 'mix.csv'
+	csvName = 'Addpickle.csv'
 	fileName = os.path.join(dirName, '..', 'results', csvName)
 
 	sheepNumKey = 'sheepNums'

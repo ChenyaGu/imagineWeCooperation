@@ -177,7 +177,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
 
         pickleResults = co.OrderedDict()
         pickleResults['condition'] = condition
-        # results["sheepConcern"] = condition['sheepConcern']
+        results["sheepConcern"] = condition['sheepConcern']
 
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
         getPlayerPos = lambda state: [self.getEntityPos(state, agentId) for agentId in range(self.numOfWolves)]

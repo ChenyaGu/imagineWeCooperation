@@ -32,7 +32,7 @@ def main():
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     # manipulatedVariables['sheepConcern'] = ['sepSheep']
     manipulatedVariables['sheepConcern'] = ['sepSheep', 'allSheep']
-    trailNumEachCondition = 100
+    trailNumEachCondition = 20
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -82,7 +82,7 @@ def main():
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
     picklePath = os.path.join(resultsDicPath, experimentValues["name"]) + '.pickle'
     writer = WriteDataFrameToCSV(writerPath)
-    pickleWriter = lambda data:saveToPickle(data,picklePath)
+    pickleWriter = lambda data: saveToPickle(data,picklePath)
     introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))
     restImage = pg.image.load(os.path.join(picturePath, 'rest-waitall.png'))
     finishImage = pg.image.load(os.path.join(picturePath, 'finish.png'))
@@ -168,14 +168,11 @@ def main():
                 layerWidth = [128, 128]
 
                 # -----------model--------
-                modelFolderName = '3wolves12w'
+                modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                # modelFolderName = 'withoutWall3wolves'
 
                 maxEpisode = 60000
-                maxEpisode12w = 120000
                 evaluateEpisode = 60000
-                evaluateEpisode12w = 120000
                 maxTimeStep = 75
                 modelSheepSpeed = 1.0
 
@@ -185,9 +182,9 @@ def main():
                                       range(numWolves, numWolves + numSheepToObserve) for i in range(numSheeps)]
 
                 modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
-                sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode12w, maxTimeStep, modelSheepSpeed)
+                # sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
-                # sheepFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+                sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
 
                 sheepModelPathsAll = [os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numWolves + numSheepToObserve)]
                 sheepModelPathsSep = [os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileNameSep + str(evaluateEpisode) + 'eps') for i in range(numSheeps)]
