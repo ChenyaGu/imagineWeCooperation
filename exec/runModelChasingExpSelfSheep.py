@@ -52,7 +52,7 @@ def main():
     screen = initializeScreen()
 
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
-    targetColor = [THECOLORS['orange'], THECOLORS['orange1'],THECOLORS['orange2'],THECOLORS['orange3']]  # [255, 50, 50]
+    targetColor = [THECOLORS['orange'], THECOLORS['chocolate1'], THECOLORS['tan1'], THECOLORS['goldenrod2']]  #'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79, 255); 'goldenrod1', (255, 193, 37)
     # targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
     playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]
     blockColors = [THECOLORS['white']] * 2
@@ -65,6 +65,7 @@ def main():
     blockRadius = int(blockSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
     finishTime = 1000 * 15
+
     stopwatchEvent = pg.USEREVENT + 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)
@@ -72,19 +73,15 @@ def main():
     pg.key.set_repeat(120, 120)
     picturePath = os.path.abspath(os.path.join(os.path.join(dirName, '..'), 'pictures'))
     resultsDicPath = os.path.join(dirName, '..', 'results')
-    
+
     # experimentValues["name"] = '0704'
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
     writer = WriteDataFrameToCSV(writerPath)
-    introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))
+    # introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))
     restImage = pg.image.load(os.path.join(picturePath, 'rest-waitall.png'))
     finishImage = pg.image.load(os.path.join(picturePath, 'finish.png'))
-    introductionImage = pg.transform.scale(introductionImage, (screenWidth, screenHeight))
+    # introductionImage = pg.transform.scale(introductionImage, (screenWidth, screenHeight))
     # finishImage = pg.transform.scale(finishImage, (int(screenWidth * 2 / 3), int(screenHeight / 4)))
-
-    drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
-    drawNewState = DrawNewStateWithBlocks(screen, drawBackground, targetColor, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
-    drawImage = DrawImage(screen)
 
     # --------environment setting-----------
     numWolves = 3
@@ -159,7 +156,7 @@ def main():
             layerWidth = [128, 128]
 
             # -----------model--------
-            modelFolderName = 'retrain3wolves'
+            modelFolderName = '3wolves'
             # modelFolderName = 'withoutWall2wolves'
             maxEpisode = 60000
             evaluateEpisode = 60000
@@ -203,16 +200,23 @@ def main():
     # drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
-    trial = NewtonChaseTrialAllCondtionVariouSpeedForModel(screen, killzone, numWolves, numBlocks, stopwatchEvent, drawNewState, checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit)
+
+    drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
+    drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
+    drawImage = DrawImage(screen)
+    trial = NewtonChaseTrialAllCondtionVariouSpeedForModel(screen, killzone, targetColor, numWolves, numBlocks,
+                                                           stopwatchEvent, drawNewState, checkTerminationOfTrial,
+                                                           recordEaten, modelController, getEntityPos, getEntityVel,
+                                                           allSheepPolicy, transit)
 
     hasRest = False  # True
     experiment = NewtonExperiment(restImage,hasRest,trial, writer, experimentValues, reset, drawImage)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     # drawImageBoth(introductionImage)
     block = 1
-    restDuration = 60
+    restTimes = 3  # the number of breaks in an experiment
     for i in range(block):
-        experiment(finishTime, AllConditions, restDuration)
+        experiment(finishTime, AllConditions, restTimes)
         # giveExperimentFeedback(i, score)
         if i == block - 1:
             drawImage(finishImage)

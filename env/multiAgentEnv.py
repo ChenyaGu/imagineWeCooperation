@@ -257,6 +257,7 @@ class Observe:
             velInfo.append(sheepVel)
 
         agentVel = self.getEntityVel(state, self.agentID)
+        # print(self.agentID,self.sheepsID,':',state)
         # print(self.agentID,self.sheepsID,':',np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo))
         return np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo)
 

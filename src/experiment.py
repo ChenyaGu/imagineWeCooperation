@@ -34,7 +34,6 @@ class NewtonExperiment():
             totalTrialNum = len(trailCondtions)
             if np.mod(trialIndex, totalTrialNum/restTimes) == 0 and self.hasRest and (trialIndex < totalTrialNum):
                 self.drawImage(self.restImage)
-        # return result
 
 class Experiment():
     def __init__(self, trial, writer, experimentValues, initialWorld, updateWorld, drawImage, resultsPath):
