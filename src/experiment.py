@@ -26,11 +26,11 @@ class NewtonExperiment():
             sheepNums = condition['sheepNums']
             initState = self.reset(sheepNums)
             currentStopwatch = 0
-            pickleResult,result, finalState, score, totalScore, currentStopwatch, eatenFlag = self.trial(
+            pickleResult, result, finalState, score, totalScore, currentStopwatch, eatenFlag = self.trial(
                 initState, score, finishTime, currentStopwatch, trialIndex, condition)
             result["sheepNums"] = sheepNums
             result["totalScore"] = str(totalScore)
-            pickleResult['trialIndex']=trialIndex
+            pickleResult['trialIndex'] = trialIndex
             response = self.experimentValues.copy()
             response.update(result)
             pickleDataList.append(pickleResult)

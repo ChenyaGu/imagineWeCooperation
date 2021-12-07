@@ -39,6 +39,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
+        pickleResults = co.OrderedDict()
+        pickleResults['condition'] = condition
         results["sheepConcern"] = condition['sheepConcern']
 
         pg.event.set_allowed([pg.KEYDOWN, pg.KEYUP, pg.QUIT, self.stopwatchEvent])
@@ -50,6 +52,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         pause = True
         state = initState
         stateList = []
+        trajectory = []
         initTargetPositions = getTargetPos(initState)
         initPlayerPositions = getPlayerPos(initState)
         initBlockPositions = getBlockPos(initState)
@@ -72,10 +75,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
             remainningTime = max(0, finishTime - currentStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            # wolfPolicy = self.modelController[sheepNums]
             wolfPolicy = self.modelController[sheepNums, sheepConcern]
             humanAction = wolfPolicy(state)
-            # sheepPolicy = self.allSheepPolicy[sheepNums]
             sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
             sheepAction = sheepPolicy(state)
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
@@ -89,61 +90,63 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
             score = hunterFlag
             self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
             pg.display.update()
+            action = humanAction + sheepAction
+            trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)
             pause = self.checkTerminationOfTrial(currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
-
+        pickleResults['trajectory'] = trajectory
         results["trialTime"] = wholeResponseTime
         results["hunterFlag"] = str(hunterFlag)
         results["sheepEatenFlag"] = str(eatenFlag)
         results["trialScore"] = sum(eatenFlag)
         wolf1Traj = []
-        # wolf1Vel = []
+        wolf1Vel = []
         wolf2Traj = []
-        # wolf2Vel = []
+        wolf2Vel = []
         if self.numOfWolves == 3:
             wolf3Traj = []
-            # wolf3Vel = []
+            wolf3Vel = []
         sheepTraj = []
-        # sheepVel = []
+        sheepVel = []
         for i in range(len(stateList)):
             allAgentTraj = stateList[i]
             wolf1Traj.append(self.getEntityPos(allAgentTraj, 0))
-            # wolf1Vel.append(self.getEntityVel(allAgentTraj, 0))
+            wolf1Vel.append(self.getEntityVel(allAgentTraj, 0))
             wolf2Traj.append(self.getEntityPos(allAgentTraj, 1))
-            # wolf2Vel.append(self.getEntityVel(allAgentTraj, 1))
+            wolf2Vel.append(self.getEntityVel(allAgentTraj, 1))
             if self.numOfWolves == 3:
                 wolf3Traj.append(self.getEntityPos(allAgentTraj, 2))
-                # wolf3Vel.append(self.getEntityVel(allAgentTraj, 2))
+                wolf3Vel.append(self.getEntityVel(allAgentTraj, 2))
             for j in range(sheepNums):
                 sheepTraj.append(self.getEntityPos(allAgentTraj, j + self.numOfWolves))
-                # sheepVel.append(self.getEntityVel(allAgentTraj, j + self.numOfWolves))
+                sheepVel.append(self.getEntityVel(allAgentTraj, j + self.numOfWolves))
 
         roundFunc = lambda x: round(x, 2)
         wolf1Traj = [list(map(roundFunc, i)) for i in wolf1Traj]
         wolf2Traj = [list(map(roundFunc, i)) for i in wolf2Traj]
         sheepTraj = [list(map(roundFunc, i)) for i in sheepTraj]
-        # wolf1Vel = [list(map(roundFunc, i)) for i in wolf1Vel]
-        # wolf2Vel = [list(map(roundFunc, i)) for i in wolf2Vel]
-        # sheepVel = [list(map(roundFunc, i)) for i in sheepVel]
+        wolf1Vel = [list(map(roundFunc, i)) for i in wolf1Vel]
+        wolf2Vel = [list(map(roundFunc, i)) for i in wolf2Vel]
+        sheepVel = [list(map(roundFunc, i)) for i in sheepVel]
 
         results["player1 traj"] = str(wolf1Traj)
         results["player2 traj"] = str(wolf2Traj)
         if self.numOfWolves == 3:
             wolf3Traj = [list(map(roundFunc, i)) for i in wolf3Traj]
-            # wolf3Vel = [list(map(roundFunc, i)) for i in wolf3Vel]
+            wolf3Vel = [list(map(roundFunc, i)) for i in wolf3Vel]
             results["player3 traj"] = str(wolf3Traj)
-            # results["player3 vel"] = str(wolf3Vel)
+            results["player3 vel"] = str(wolf3Vel)
         results["sheeps traj"] = str(sheepTraj)
-        # results["player1 vel"] = str(wolf1Vel)
-        # results["player2 vel"] = str(wolf2Vel)
-        # results["sheeps vel"] = str(sheepVel)
+        results["player1 vel"] = str(wolf1Vel)
+        results["player2 vel"] = str(wolf2Vel)
+        results["sheeps vel"] = str(sheepVel)
 
         totalScore = np.sum(score)
         print(totalScore)
-        return results, nextState, score, totalScore, currentStopwatch, eatenFlag
+        return pickleResults, results, nextState, score, totalScore, currentStopwatch, eatenFlag
 
 
 class NewtonChaseTrialAllCondtionVariouSpeed():
@@ -174,7 +177,6 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         sheepForce = wolfForce * condition['sheepWolfForceRatio']
 
         results = co.OrderedDict()
-
         pickleResults = co.OrderedDict()
         pickleResults['condition'] = condition
         results["sheepConcern"] = condition['sheepConcern']
@@ -221,7 +223,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
                     pg.quit()
                 elif event.type == self.stopwatchEvent:
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
-            currentEatenFlag,eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
+            currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
             score = hunterFlag
             self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score,currentEatenFlag)
             pg.display.update()
@@ -238,50 +240,50 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         results["sheepEatenFlag"] = str(eatenFlag)
         results["trialScore"] = sum(eatenFlag)
         wolf1Traj = []
-        # wolf1Vel = []
+        wolf1Vel = []
         wolf2Traj = []
-        # wolf2Vel = []
+        wolf2Vel = []
         if self.numOfWolves == 3:
             wolf3Traj = []
-            # wolf3Vel = []
+            wolf3Vel = []
         sheepTraj = []
-        # sheepVel = []
+        sheepVel = []
         for i in range(len(stateList)):
             allAgentTraj = stateList[i]
             wolf1Traj.append(self.getEntityPos(allAgentTraj, 0))
-            # wolf1Vel.append(self.getEntityVel(allAgentTraj, 0))
+            wolf1Vel.append(self.getEntityVel(allAgentTraj, 0))
             wolf2Traj.append(self.getEntityPos(allAgentTraj, 1))
-            # wolf2Vel.append(self.getEntityVel(allAgentTraj, 1))
+            wolf2Vel.append(self.getEntityVel(allAgentTraj, 1))
             if self.numOfWolves == 3:
                 wolf3Traj.append(self.getEntityPos(allAgentTraj, 2))
-                # wolf3Vel.append(self.getEntityVel(allAgentTraj, 2))
+                wolf3Vel.append(self.getEntityVel(allAgentTraj, 2))
             for j in range(sheepNums):
                 sheepTraj.append(self.getEntityPos(allAgentTraj, j + self.numOfWolves))
-                # sheepVel.append(self.getEntityVel(allAgentTraj, j + self.numOfWolves))
+                sheepVel.append(self.getEntityVel(allAgentTraj, j + self.numOfWolves))
 
         roundFunc = lambda x: round(x, 2)
         wolf1Traj = [list(map(roundFunc, i)) for i in wolf1Traj]
         wolf2Traj = [list(map(roundFunc, i)) for i in wolf2Traj]
         sheepTraj = [list(map(roundFunc, i)) for i in sheepTraj]
-        # wolf1Vel = [list(map(roundFunc, i)) for i in wolf1Vel]
-        # wolf2Vel = [list(map(roundFunc, i)) for i in wolf2Vel]
-        # sheepVel = [list(map(roundFunc, i)) for i in sheepVel]
+        wolf1Vel = [list(map(roundFunc, i)) for i in wolf1Vel]
+        wolf2Vel = [list(map(roundFunc, i)) for i in wolf2Vel]
+        sheepVel = [list(map(roundFunc, i)) for i in sheepVel]
 
         results["player1 traj"] = str(wolf1Traj)
         results["player2 traj"] = str(wolf2Traj)
         if self.numOfWolves == 3:
             wolf3Traj = [list(map(roundFunc, i)) for i in wolf3Traj]
-            # wolf3Vel = [list(map(roundFunc, i)) for i in wolf3Vel]
+            wolf3Vel = [list(map(roundFunc, i)) for i in wolf3Vel]
             results["player3 traj"] = str(wolf3Traj)
-            # results["player3 vel"] = str(wolf3Vel)
+            results["player3 vel"] = str(wolf3Vel)
         results["sheeps traj"] = str(sheepTraj)
-        # results["player1 vel"] = str(wolf1Vel)
-        # results["player2 vel"] = str(wolf2Vel)
-        # results["sheeps vel"] = str(sheepVel)
+        results["player1 vel"] = str(wolf1Vel)
+        results["player2 vel"] = str(wolf2Vel)
+        results["sheeps vel"] = str(sheepVel)
 
         totalScore = np.sum(score)
         print(totalScore)
-        return pickleResults,results, nextState, score, totalScore, currentStopwatch, eatenFlag
+        return pickleResults, results, nextState, score, totalScore, currentStopwatch, eatenFlag
 
 
 class NewtonChaseTrialAllCondtion():

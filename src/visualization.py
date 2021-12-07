@@ -82,10 +82,8 @@ class DrawBackground():
         return
 
 
-
-
 class DrawNewStateWithBlocks():
-    def __init__(self, screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor=[THECOLORS['yellow']]):
+    def __init__(self, screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor= [THECOLORS['yellow']]):
         self.screen = screen
         self.drawBackground = drawBackground
         self.playerColors = playerColors
