@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	csvName = 'score.csv'
+	csvName = 'Modeltest.csv'
 	fileName = os.path.join(dirName, '..', 'results', csvName)
 
 	sheepNumKey = 'sheepNums'
@@ -89,9 +89,12 @@ if __name__=="__main__":
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition
 	dfAverageScore = groupNumAndConcern.mean()  # average score for every condition
 	print(dfTotalScore)
+	realScore = 0
 	for i in range(len(dfTrialData)):
 		if dfTrialData.iloc[i]["trialScore"] > 50:
-			print(dfTrialData[i:i+1])
+			realScore += dfTrialData.iloc[i]["trialScore"]
+			# print(dfTrialData[i:i+1])
+	print(realScore)
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
