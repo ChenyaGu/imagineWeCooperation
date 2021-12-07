@@ -52,7 +52,7 @@ def main():
 
     screenWidth = int(800)
     screenHeight = int(800)
-    fullScreen = False
+    fullScreen = True
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 

@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	csvName = 'Addpickle.csv'
+	csvName = 'score.csv'
 	fileName = os.path.join(dirName, '..', 'results', csvName)
 
 	sheepNumKey = 'sheepNums'
@@ -88,6 +88,10 @@ if __name__=="__main__":
 	groupNumAndConcern = dfTrialData.groupby(['sheepConcern', 'sheepNum'])
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition
 	dfAverageScore = groupNumAndConcern.mean()  # average score for every condition
+	print(dfTotalScore)
+	for i in range(len(dfTrialData)):
+		if dfTrialData.iloc[i]["trialScore"] > 50:
+			print(dfTrialData[i:i+1])
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
