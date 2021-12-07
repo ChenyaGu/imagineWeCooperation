@@ -30,8 +30,8 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1, 2, 4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
-    # manipulatedVariables['sheepConcern'] = ['sepSheep']
-    manipulatedVariables['sheepConcern'] = ['sepSheep', 'allSheep']
+    # manipulatedVariables['sheepConcern'] = ['self']
+    manipulatedVariables['sheepConcern'] = ['self', 'all']
     trailNumEachCondition = 20
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
@@ -140,9 +140,9 @@ def main():
 
             def loadPolicyOneCondition(numSheeps, sheepConcern):
                 # -----------observe--------
-                if sheepConcern == 'sepSheep':
+                if sheepConcern == 'self':
                     numSheepToObserve = 1
-                if sheepConcern == 'allSheep':
+                if sheepConcern == 'all':
                     numSheepToObserve = numSheeps
 
                 wolvesIDForSheepObserve = list(range(numWolves))
@@ -182,7 +182,6 @@ def main():
                                       range(numWolves, numWolves + numSheepToObserve) for i in range(numSheeps)]
 
                 modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
-                # sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
 
@@ -215,12 +214,12 @@ def main():
     drawImageBoth = DrawImageWithJoysticksCheck(screen, humanController.joystickList)
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
-    trial = NewtonChaseTrialAllCondtionVariouSpeed(screen, killzone,targetColor, numWolves, numBlocks, stopwatchEvent,
+    trial = NewtonChaseTrialAllCondtionVariouSpeed(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                    drawNewState, checkTerminationOfTrial, recordEaten, humanController,
                                                    getEntityPos, getEntityVel, allSheepPolicy, transit)
 
     hasRest = True
-    experiment = NewtonExperiment(restImage,hasRest,trial, writer,pickleWriter, experimentValues, reset, drawImageBoth)
+    experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, drawImageBoth)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImageBoth(introductionImage)
     block = 1
