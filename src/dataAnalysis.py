@@ -15,11 +15,11 @@ def createAllCertainFormatFileList(filePath,fileFormat):
 def cleanDataFrame(rawDataFrame):
 	cleanConditionDataFrame=rawDataFrame[rawDataFrame.condition != 'None']
 	cleanBeanEatenDataFrame=cleanConditionDataFrame[cleanConditionDataFrame.beanEaten!=0]
-	cleanbRealConditionDataFrame=cleanBeanEatenDataFrame.loc[cleanBeanEatenDataFrame['realCondition'].isin(range(-5,6))]
+	cleanbRealConditionDataFrame=cleanBeanEatenDataFrame.loc[cleanBeanEatenDataFrame['abnormalCondition'].isin(range(-5,6))]
 	return cleanbRealConditionDataFrame
 
 def calculateRealCondition(rawDataFrame):
-	rawDataFrame['realCondition']=(np.abs(rawDataFrame['bean2GridX'] - rawDataFrame['playerGridX'])+np.abs(rawDataFrame['bean2GridY'] - rawDataFrame['playerGridY']))-(np.abs(rawDataFrame['bean1GridX'] - rawDataFrame['playerGridX'])+np.abs(rawDataFrame['bean1GridY'] - rawDataFrame['playerGridY']))
+	rawDataFrame['abnormalCondition']=(np.abs(rawDataFrame['bean2GridX'] - rawDataFrame['playerGridX'])+np.abs(rawDataFrame['bean2GridY'] - rawDataFrame['playerGridY']))-(np.abs(rawDataFrame['bean1GridX'] - rawDataFrame['playerGridX'])+np.abs(rawDataFrame['bean1GridY'] - rawDataFrame['playerGridY']))
 	newDataFrameWithRealCondition=rawDataFrame.copy()
 	return newDataFrameWithRealCondition
 
@@ -55,11 +55,11 @@ if __name__=="__main__":
 	# participantsTypeList = ['Model' if 'Model' in name else 'Human' for name in resultsDataFrame['name']]
 	# resultsDataFrame['participantsType']=participantsTypeList
 	# resultsDataFrame['beanEaten']=resultsDataFrame['beanEaten']-1
-	# trialNumberEatNewDataFrame = resultsDataFrame.groupby(['name','realCondition','participantsType']).sum()['beanEaten']
-	# trialNumberTotalEatDataFrame = resultsDataFrame.groupby(['name','realCondition','participantsType']).count()['beanEaten']
+	# trialNumberEatNewDataFrame = resultsDataFrame.groupby(['name','abnormalCondition','participantsType']).sum()['beanEaten']
+	# trialNumberTotalEatDataFrame = resultsDataFrame.groupby(['name','abnormalCondition','participantsType']).count()['beanEaten']
 	# mergeConditionDataFrame = pd.DataFrame(trialNumberEatNewDataFrame.values/trialNumberTotalEatDataFrame.values,index=trialNumberTotalEatDataFrame.index,columns=['eatNewPercentage'])
 	# mergeConditionDataFrame['eatOldPercentage']=1 - mergeConditionDataFrame['eatNewPercentage']
-	# mergeParticipantsDataFrame = mergeConditionDataFrame.groupby(['realCondition','participantsType']).mean()
+	# mergeParticipantsDataFrame = mergeConditionDataFrame.groupby(['abnormalCondition','participantsType']).mean()
 	# drawEatOldDataFrame=mergeParticipantsDataFrame['eatOldPercentage'].unstack('participantsType')
 	# ax=drawEatOldDataFrame.plot.bar(color=['lightsalmon', 'lightseagreen'],ylim=[0.0,1.1],width=0.8)
 	# pl.xticks(rotation=0)
@@ -88,19 +88,23 @@ if __name__=="__main__":
 	groupNumAndConcern = dfTrialData.groupby(['sheepConcern', 'sheepNum'])
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition
 	dfAverageScore = groupNumAndConcern.mean()  # average score for every condition
-	print(dfTotalScore)
-	realScore = 0
+	print(dfAverageScore)
+	abnormalTrial = 0
+	abnormalScore = 0
 	for i in range(len(dfTrialData)):
 		if dfTrialData.iloc[i]["trialScore"] > 50:
-			realScore += dfTrialData.iloc[i]["trialScore"]
+			abnormalTrial += 1
+			abnormalScore += dfTrialData.iloc[i]["trialScore"]
 			# print(dfTrialData[i:i+1])
-	print(realScore)
+	print('abnormal trial number: ', abnormalTrial)
+	print('abnormal trial total score: ', abnormalScore)
+	print('total score: ', dfTrialData[["trialScore"]].sum())
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
 	# sns.barplot(x='sheepNum', y='trialScore', data=dfTrialData, estimator=np.mean)  # for NO sheepCorncern condition
 	# barplot: Default: np.mean
-	sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean)
+	sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Greys')
 	# sns.boxplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData)
 
 	# 设置坐标轴下标的字体大小
