@@ -30,8 +30,8 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1, 2, 4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
-    # manipulatedVariables['sheepConcern'] = ['self']
-    manipulatedVariables['sheepConcern'] = ['self', 'all']
+    manipulatedVariables['sheepConcern'] = ['self']
+    # manipulatedVariables['sheepConcern'] = ['self', 'all']
     trailNumEachCondition = 20
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])

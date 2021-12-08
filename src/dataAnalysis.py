@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	csvName = 'Modeltest.csv'
+	csvName = 'Liangjiaojiao chenzelong sunkexin.csv'
 	fileName = os.path.join(dirName, '..', 'results', csvName)
 
 	sheepNumKey = 'sheepNums'
@@ -85,10 +85,13 @@ if __name__=="__main__":
 		'trialScore': trialScore
 	}
 	dfTrialData = pd.DataFrame(datas)
+	totalScore = dfTrialData[["trialScore"]].sum()
 	groupNumAndConcern = dfTrialData.groupby(['sheepConcern', 'sheepNum'])
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition
 	dfAverageScore = groupNumAndConcern.mean()  # average score for every condition
-	print(dfAverageScore)
+	print(dfTotalScore)
+	print(totalScore)
+
 	abnormalTrial = 0
 	abnormalScore = 0
 	for i in range(len(dfTrialData)):
@@ -98,7 +101,9 @@ if __name__=="__main__":
 			# print(dfTrialData[i:i+1])
 	print('abnormal trial number: ', abnormalTrial)
 	print('abnormal trial total score: ', abnormalScore)
-	print('total score: ', dfTrialData[["trialScore"]].sum())
+	print('total score: ', totalScore)
+	money = (totalScore - abnormalScore + 50 * abnormalTrial) / 100 + 20
+	print('you can get:', money)
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
