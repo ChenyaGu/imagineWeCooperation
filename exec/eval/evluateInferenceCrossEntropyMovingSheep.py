@@ -110,8 +110,8 @@ def main():
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
     
     dataPath = os.path.join(dirName,'..','..','results')
-    loadDataPath =  os.path.join(dataPath,'resultsWithIntension')
-    # loadDataPath =  os.path.join(dataPath,'machineResultsWithIntention')
+    # loadDataPath =  os.path.join(dataPath,'resultsWithIntension')
+    loadDataPath =  os.path.join(dataPath,'machineResultsWithIntention')
 
     fileNameList = os.listdir(loadDataPath)
     rawPickleList = []
@@ -195,9 +195,9 @@ def main():
 
         plotCounter = plotCounter + 1
 
-    # plt.suptitle('Shared Reward MADDPG ' + str(numWolves) + 'Wolves Convege Rate')
+    plt.suptitle('Shared Reward MADDPG ' + str(numWolves) + 'Wolves Convege Rate')
     # plt.suptitle('humanPlayers ' + str(numWolves) + 'Wolves Convege Rate (SubNumber = {} )'.format(len(fileNameList)) )
-    plt.suptitle('humanPlayers ' + str(numWolves) + 'Wolves Convege Rate (SubName = {} )'.format(fileName[:-7]) )
+    # plt.suptitle('humanPlayers ' + str(numWolves) + 'Wolves Convege Rate (SubName = {} )'.format(fileName[:-7]) )
     #plt.legend(loc='best')
     #fig.text(x = 0.5, y = 0.04, s = 'Rationality In Inference', ha = 'center', va = 'center')
     #fig.text(x = 0.05, y = 0.5, s = 'valuePriorEndTime', ha = 'center', va = 'center', rotation=90)
