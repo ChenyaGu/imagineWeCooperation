@@ -19,8 +19,11 @@ import glob
 from src.writer import loadFromPickle
 
 dataPath = os.path.join(dirName,'..','..','results')
+loadDataPath = os.path.join(dataPath,'rawResults')
+saveDataPath =  os.path.join(dataPath,'resultsWithIntension')
 
 resultPath = glob.glob(os.path.join(dataPath, '*.pickle'))
+
 data = loadFromPickle(resultPath[0])
 # print(data)
 # print(data[0])
@@ -52,7 +55,7 @@ class ComposeCentralControlPolicyByGaussianOnDeterministicAction:
         return centralControlPolicy
 manipulatedVariables = OrderedDict()
 manipulatedVariables['numWolves'] = [3]
-manipulatedVariables['numSheep'] = [4]
+manipulatedVariables['numSheep'] = [1]
 manipulatedVariables['valuePriorSoftMaxBeta'] = [0.0]
 manipulatedVariables['valuePriorEndTime'] = [-100]
 manipulatedVariables['deviationFor2DAction'] = [1.0]#, 3.0, 9.0]
@@ -228,7 +231,7 @@ wolvesSampleIndividualActionGivenIntentionList = [SampleIndividualActionGivenInt
 
 # Sample and Save Trajectory
 trajectoriesWithIntentionDists = []
-trajectory = data[1]['trajectory']
+trajectory = data[0]['trajectory']
 # print( data[1]['condition'],len(data[1]['trajectory']))
 wolvesSampleActions = [GetIntensionOnChangableIntention(updateIntention, wolvesSampleIndividualActionGivenIntention) 
                     for updateIntention, wolvesSampleIndividualActionGivenIntention in zip(updateIntentions, wolvesSampleIndividualActionGivenIntentionList)]
