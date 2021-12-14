@@ -68,16 +68,25 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	csvName = 'Liangjiaojiao chenzelong sunkexin.csv'
-	fileName = os.path.join(dirName, '..', 'results', csvName)
+	fileFolder = os.path.join(dirName, '..', 'results')
+	csvList = []
+	a = os.listdir(fileFolder)
+	for j in a:
+		if os.path.splitext(j)[1] == '.csv':
+			csvList.append(fileFolder+'/'+j)
 
 	sheepNumKey = 'sheepNums'
 	sheepConcernKey = 'sheepConcern'
 	trialScoreKey = 'trialScore'
 
-	readFun = lambda key: readListCSV(fileName, key)
-	sheepNum, trialScore = readFun(sheepNumKey), readFun(trialScoreKey)
-	sheepConcern = readCSV(fileName, sheepConcernKey)
+	sheepNum = []
+	trialScore = []
+	sheepConcern = []
+	for i in range(len(csvList)):
+		readFun = lambda key: readListCSV(csvList[i], key)
+		sheepNum.extend(readFun(sheepNumKey))
+		trialScore.extend(readFun(trialScoreKey))
+		sheepConcern.extend(readCSV(csvList[i], sheepConcernKey))
 
 	datas = {
 		'sheepNum': sheepNum,
@@ -85,31 +94,18 @@ if __name__=="__main__":
 		'trialScore': trialScore
 	}
 	dfTrialData = pd.DataFrame(datas)
-	totalScore = dfTrialData[["trialScore"]].sum()
 	groupNumAndConcern = dfTrialData.groupby(['sheepConcern', 'sheepNum'])
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition
 	dfAverageScore = groupNumAndConcern.mean()  # average score for every condition
-	print(dfTotalScore)
-	print(totalScore)
-
-	abnormalTrial = 0
-	abnormalScore = 0
-	for i in range(len(dfTrialData)):
-		if dfTrialData.iloc[i]["trialScore"] > 50:
-			abnormalTrial += 1
-			abnormalScore += dfTrialData.iloc[i]["trialScore"]
-			# print(dfTrialData[i:i+1])
-	print('abnormal trial number: ', abnormalTrial)
-	print('abnormal trial total score: ', abnormalScore)
-	print('total score: ', totalScore)
-	money = (totalScore - abnormalScore + 50 * abnormalTrial) / 100 + 20
-	print('you can get:', money)
+	dfResetIndex = dfAverageScore.reset_index()
+	dfSelfAverScore = dfResetIndex[dfResetIndex.sheepConcern == 'self']
+	print(dfSelfAverScore)
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
-	# sns.barplot(x='sheepNum', y='trialScore', data=dfTrialData, estimator=np.mean)  # for NO sheepCorncern condition
 	# barplot: Default: np.mean
-	sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Greys')
+	sns.barplot(x='sheepNum', y='trialScore', data=dfSelfAverScore, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Blues')
+	# sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Greys')
 	# sns.boxplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData)
 
 	# 设置坐标轴下标的字体大小
