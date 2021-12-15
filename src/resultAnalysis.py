@@ -28,7 +28,11 @@ def readCSV(fileName, keyName):
 
 if __name__ == "__main__":
 	dirName = os.path.dirname(__file__)
+<<<<<<< HEAD
 	csvName = 'Guozehao fengsuyang caijiaxuan.csv'
+=======
+	csvName = 'Zhangliutao taoye wangxiaoyu.csv'
+>>>>>>> 9fde5e76cbffca9da3c9b14adcf4f83107b3749b
 	fileName = os.path.join(dirName, '..', 'results', csvName)
 
 	sheepNumKey = 'sheepNums'
@@ -61,7 +65,11 @@ if __name__ == "__main__":
 	print('+_+ abnormal trial number: ', abnormalTrial)
 	print('+_+ abnormal trial total score: ', abnormalScore)
 	print('^_^ total score: ', totalScore)
+<<<<<<< HEAD
 	money = float((totalScore - abnormalScore + 50 * abnormalTrial) / 100 + 20)
+=======
+	money = float((totalScore - abnormalScore + 50 * abnormalTrial) / 100 + 30)
+>>>>>>> 9fde5e76cbffca9da3c9b14adcf4f83107b3749b
 	print('^_^ you can get: ¥', money)
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks

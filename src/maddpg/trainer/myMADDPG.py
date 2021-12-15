@@ -5,6 +5,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import tensorflow.contrib.layers as layers
 import src.maddpg.common.tf_util as U
 
+from scipy.special import softmax
 
 class BuildMADDPGModels:
     def __init__(self, actionDim, numAgents, obsShapeList, actionRange = 1):
@@ -188,6 +189,15 @@ class ActOneStep:
         actions = self.actByTrain(model, allAgentsStates)[0]
         return actions
 
+def actByPolicyTrainNoNoisy(model, allAgentsStatesBatch):
+    graph = model.graph
+    allAgentsStates_ = graph.get_collection_ref("allAgentsStates_")[0]
+    trainAction_ = graph.get_collection_ref("trainAction_")[0]
+    stateDict = {agentState_: [states[i] for states in allAgentsStatesBatch] for i, agentState_ in enumerate(allAgentsStates_)}
+
+    trainAction = model.run(trainAction_, feed_dict= stateDict)
+    normalizedTrainAction = softmax(trainAction, axis = 1)
+    return normalizedTrainAction
 
 
 def actByPolicyTrainNoisy(model, allAgentsStatesBatch):
