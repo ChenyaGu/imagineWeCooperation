@@ -94,18 +94,19 @@ if __name__=="__main__":
 		'trialScore': trialScore
 	}
 	dfTrialData = pd.DataFrame(datas)
+	dfSelfSheepData = dfTrialData[dfTrialData.sheepConcern == 'self']
 	groupNumAndConcern = dfTrialData.groupby(['sheepConcern', 'sheepNum'])
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition
 	dfAverageScore = groupNumAndConcern.mean()  # average score for every condition
 	dfResetIndex = dfAverageScore.reset_index()
-	dfSelfAverScore = dfResetIndex[dfResetIndex.sheepConcern == 'self']
-	print(dfSelfAverScore)
+	dfSelfAverageScore = dfResetIndex[dfResetIndex.sheepConcern == 'self']
+	print(dfSelfAverageScore)
 
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
 	# barplot: Default: np.mean
-	sns.barplot(x='sheepNum', y='trialScore', data=dfSelfAverScore, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Blues')
-	# sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Greys')
+	sns.barplot(x='sheepNum', y='trialScore', data=dfSelfSheepData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Reds')
+	# sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Blues')
 	# sns.boxplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData)
 
 	# 设置坐标轴下标的字体大小
@@ -113,7 +114,7 @@ if __name__=="__main__":
 	plt.yticks(fontsize=10)
 
 	# 设置坐标名字与字体大小
-	plt.ylabel('score', fontsize=10)
+	plt.ylabel('average score', fontsize=10)
 
 	# 设置X轴的各列下标字体是水平的
 	plt.xticks(rotation='horizontal')

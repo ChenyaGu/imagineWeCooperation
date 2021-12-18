@@ -24,7 +24,7 @@ from src.writer import loadFromPickle,saveToPickle
 # print(data[0])
 
 from src.mathTools.distribution import sampleFromDistribution,  SoftDistribution, BuildGaussianFixCov, sampleFromContinuousSpace
-from src.inference.intention import   UpdateIntention
+from src.inference.intention import UpdateIntention
 from src.inference.inference import CalUncommittedAgentsPolicyLikelihood, CalCommittedAgentsContinuousPolicyLikelihood, InferOneStep
 from src.inference.percept import SampleNoisyAction, PerceptImaginedWeAction
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpVariousForce, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
@@ -80,8 +80,6 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
     minDistance = mapSize * 1 / 3 
     reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, numBlocks, mapSize, minDistance)
 
-
-
     intentionSpacesForAllWolves = [tuple(it.product(possibleSheepIds, [tuple(possibleWolvesIds)])) 
                     for wolfId in possibleWolvesIds]
     # print(intentionSpacesForAllWolves)
@@ -100,7 +98,6 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
     weModelsListBaseOnNumInWe = []
     observeListBaseOnNumInWe = []
     for numAgentInWe in range(numWolves, numWolves + 1):
-
             worldDim = 2
             actionDim = worldDim * 2 + 1
             numBlocksForWe = 0
@@ -126,12 +123,12 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
             # wolfFileName = "{}wolves{}sheep{}blocks{}eps_agent".format(numAgentInWe, 1, numBlocksForWe, maxEpisode)
             modelFolderName = 'withoutWall3wolvesForModel'
             modelFolder = os.path.join(dirName, '..','..', 'model', modelFolderName)
-            numBlocks = 0 
+            numBlocks = 0
             maxEpisode = 60000
             maxTimeStep = 75
             modelSheepSpeed = 1.0
             # wolfModelPaths = [os.path.join(dirName, '..', '..', 'data', 'preTrainModel', wolfPrefix + wolfFileName + str(i) + '60000eps') for i in range(numAgentInWe)]
-            wolfFileName =  "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+            wolfFileName = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
             evaluateEpisode = 60000
             # wolfModelPaths = [os.path.join(modelFolder, 'trainingId' + str(i) + wolfFileName + str(evaluateEpisode) + 'eps') for i in range(numWolves)]
             wolfModelPaths = [os.path.join(modelFolder, wolfFileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves)]
@@ -200,7 +197,7 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
     attributesToRecord = ['lastAction']
     recordActionForUpdateIntention = RecordValuesForObjects(attributesToRecord, updateIntentions) 
 
-    # Wovels Generate Action
+    # Wolves Generate Action
     covForPlanning = [0.03 ** 2 for _ in range(actionDimReshaped)]
     buildGaussianForPlanning = BuildGaussianFixCov(covForPlanning)
     composeCentralControlPolicyForPlanning = lambda observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction(reshapeAction,observe, actOneStepOneModelWolf, buildGaussianForPlanning) 
@@ -256,7 +253,7 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
             trajectoriesWithIntentionDists.append(trajectoryDictWithIntension) 
             # print(trajectoryWithIntentionDists)
             resetIntentions()
-    print('finish{}numSheep:{}'.format(fileName,numSheep))
+    print('finish:{}, numSheep:{}'.format(fileName,numSheep))
     return trajectoriesWithIntentionDists
 # print(data[1]['condition'])
 # print(trajectoryWithIntentionDists[0][3],trajectoryWithIntentionDists[-1][3])
@@ -269,7 +266,7 @@ if __name__ == "__main__":
     # saveDataPath =  os.path.join(dataPath,'resultsWithIntension')
 
     loadDataPath = os.path.join(dataPath,'rawMachineResults')
-    saveDataPath =  os.path.join(dataPath,'machineResultsWithIntention')
+    saveDataPath = os.path.join(dataPath,'machineResultsWithIntention')
 
     # resultPath = glob.glob(os.path.join(loadDataPath, '*.pickle'))
     fileNameList = os.listdir(loadDataPath)

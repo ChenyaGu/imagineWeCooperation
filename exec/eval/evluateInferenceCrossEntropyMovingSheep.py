@@ -110,13 +110,13 @@ def main():
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
     
     dataPath = os.path.join(dirName,'..','..','results')
-    # loadDataPath =  os.path.join(dataPath,'resultsWithIntension')
-    loadDataPath =  os.path.join(dataPath,'machineResultsWithIntention')
+    # loadDataPath = os.path.join(dataPath,'resultsWithIntension')
+    loadDataPath = os.path.join(dataPath,'machineResultsWithIntention')
 
     fileNameList = os.listdir(loadDataPath)
     rawPickleList = []
-    x = 0
     # targetFileNameList = fileNameList
+    x = 0
     targetFileNameList = fileNameList[x:x+1]
     
     for fileName in targetFileNameList:
@@ -149,9 +149,8 @@ def main():
     #loadTrajectoriesFromDf = lambda df: [trajectory for trajectory in loadTrajectories(readParametersFromDf(df)) if len(trajectory) < readParametersFromDf(df)['maxRunningSteps']]
     def getTrajectories(df,dataFrame):
         numSheep = df['numSheep']
-        # targetDf = dataFrame[(dataFrame['sheepNums'] == numSheep)&(dataFrame['sheepConcern']=='selfSheep') ]
-        
-        targetDf = dataFrame[(dataFrame['sheepNums'] == numSheep)&(dataFrame['sheepConcern'] == 'self')]
+        # targetDf = dataFrame[(dataFrame['sheepNums'] == numSheep) & (dataFrame['sheepConcern'] == 'self') & (dataFrame['trialIndex'] > 30)]
+        targetDf = dataFrame[(dataFrame['sheepNums'] == numSheep) & (dataFrame['sheepConcern'] == 'self')]
         # filterDf = targetDf[targetDf['sheepConcern'].str.contains('selfSheep')]
         print(targetDf)
         allTrajctery=[]
@@ -188,14 +187,15 @@ def main():
         #if plotCounter <= numColumns:
         #    axForDraw.set_title('Rationality Beta = '+str(key[1]))
         for numSheep, grp in group.groupby('numSheep'):
-            df = pd.DataFrame(grp.values[0].tolist(), columns = list(range(maxRunningSteps)), index = ['mean','se'])[list(range(int(maxRunningSteps - 3)))]
+            df = pd.DataFrame(grp.values[0].tolist(), columns=list(range(maxRunningSteps)), index=['mean', 'se'])[list(range(int(maxRunningSteps - 3)))]
             dfTransPosed = df.T
+            print(np.mean(dfTransPosed))
             #df.plot.line(ax = axForDraw, label = 'Set Size of Intentions = {}'.format(numSheep), y = 'mean', yerr = 'se', ylim = (0, 3), rot = 0)
-            dfTransPosed.plot.line(ax = axForDraw, label = 'numSheep = {}'.format(numSheep), y = 'mean', yerr = 'se', ylim = (0, 1.01), rot = 0)
+            dfTransPosed.plot(kind='line', ax=axForDraw, label='numSheep = {}'.format(numSheep), y='mean', ylim=(0, 1.01), rot=0)
 
         plotCounter = plotCounter + 1
 
-    plt.suptitle('Shared Reward MADDPG ' + str(numWolves) + 'Wolves Convege Rate')
+    plt.suptitle('Individual Reward MADDPG ' + str(numWolves) + 'Wolves Convege Rate')
     # plt.suptitle('humanPlayers ' + str(numWolves) + 'Wolves Convege Rate (SubNumber = {} )'.format(len(fileNameList)) )
     # plt.suptitle('humanPlayers ' + str(numWolves) + 'Wolves Convege Rate (SubName = {} )'.format(fileName[:-7]) )
     #plt.legend(loc='best')

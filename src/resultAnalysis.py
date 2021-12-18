@@ -28,8 +28,8 @@ def readCSV(fileName, keyName):
 
 if __name__ == "__main__":
 	dirName = os.path.dirname(__file__)
-	csvName = 'Zhangliutao taoye wangxiaoyu.csv'
-	fileName = os.path.join(dirName, '..', 'results', csvName)
+	csvName = 'Zhaolei zhuminjing niusheng.csv'
+	fileName = os.path.join(dirName, '..', 'results', 'rawResults', csvName)
 
 	sheepNumKey = 'sheepNums'
 	sheepConcernKey = 'sheepConcern'
@@ -45,6 +45,8 @@ if __name__ == "__main__":
 		'trialScore': trialScore
 	}
 	dfTrialData = pd.DataFrame(datas)
+	# dfTrialData = dfTrialData[dfTrialData.sheepConcern == 'self']
+
 	totalScore = int(dfTrialData[["trialScore"]].sum())
 	groupNumAndConcern = dfTrialData.groupby(['sheepConcern', 'sheepNum'])
 	dfTotalScore = groupNumAndConcern.sum()  # total score for every condition

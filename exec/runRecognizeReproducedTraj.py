@@ -45,9 +45,10 @@ def readListCSV(fileName, keyName):
 
 def main():
     textHeight = 24
-    objectSize = 20
-    showTime = 1
-    moveTime = 0.1
+    objectSize = 30
+    targetSize = 20
+    # waitTime = 0.08  # for model demo
+    waitTime = 0.03  # for human demo
 
     wPtr = visual.Window(size=[768, 768], units='pix', fullscr=False)
     introText = showText(wPtr, textHeight, 'Press ENTER to start', (0, 250))
@@ -59,80 +60,150 @@ def main():
     introText.autoDraw = False
 
     dirName = os.path.dirname(__file__)
-    csvName = 'selectedTraj.csv'
-    fileName = os.path.join(dirName, '..', 'results', csvName)
+    csvName = 'DLD4s.csv'
+    fileName = os.path.join(dirName, '..', 'results', 'drawTraj', csvName)
     readFun = lambda key: readListCSV(fileName, key)
 
-    # -----sheep position pre-processing-----
     trialNum = len(readCSV(fileName, 'name'))
-    for i in range(trialNum):
+    startTrial = 10
+    # -----target position pre-processing-----
+    for i in range(startTrial, trialNum):
         print('trial', i + 1)
-        sheepTrajKeyName = 'sheeps traj'
-        sheepNumKeyName = 'sheepNums'
-        sheepPos, sheepNum = readFun(sheepTrajKeyName), readFun(sheepNumKeyName)
-        sheep1No = [p for p in range(0, len(sheepPos[i]), sheepNum[i])]
-        sheep2No = [p for p in range(1, len(sheepPos[i]), sheepNum[i])]
-        sheepPos1 = []
-        sheepPos2 = []
-        for a, b in zip(sheep1No, sheep2No):
-            sheepPos1.append(sheepPos[i][a])
-            sheepPos2.append(sheepPos[i][b])
+        targetTrajKeyName = 'sheeps traj'
+        targetNumKeyName = 'sheepNums'
+        targetPos, targetNum = readFun(targetTrajKeyName), readFun(targetNumKeyName)
 
+        target1No = [p for p in range(0, len(targetPos[i]), targetNum[i])]
+        targetPos1 = []
+        for a in target1No:
+            targetPos1.append(targetPos[i][a])
+        if targetNum[i] == 2:
+            target2No = [p for p in range(1, len(targetPos[i]), targetNum[i])]
+            targetPos2 = []
+            for b in target2No:
+                targetPos2.append(targetPos[i][b])
+        if targetNum[i] == 4:
+            target2No = [p for p in range(1, len(targetPos[i]), targetNum[i])]
+            target3No = [p for p in range(2, len(targetPos[i]), targetNum[i])]
+            target4No = [p for p in range(3, len(targetPos[i]), targetNum[i])]
+            targetPos2 = []
+            targetPos3 = []
+            targetPos4 = []
+            for b, c, d in zip(target2No, target3No, target4No):
+                targetPos2.append(targetPos[i][b])
+                targetPos3.append(targetPos[i][c])
+                targetPos4.append(targetPos[i][d])
+
+        # -----player position pre-processing-----
         play1TrajKeyName = 'player1 traj'
         play2TrajKeyName = 'player2 traj'
         play3TrajKeyName = 'player3 traj'
         playerAllPos1, playerAllPos2, playerAllPos3 = readFun(play1TrajKeyName), readFun(play2TrajKeyName), readFun(
             play3TrajKeyName)
-
         expandRatio = 300
         expandFun = lambda pos: expandCoordination(pos, expandRatio)
         playerPos1, playerPos2, playerPos3, = expandFun(playerAllPos1[i]), expandFun(
             playerAllPos2[i]), expandFun(playerAllPos3[i])
-        sheepPos1 = expandCoordination(sheepPos1, expandRatio)
-        sheepPos2 = expandCoordination(sheepPos2, expandRatio)
 
+        targetPos1 = expandCoordination(targetPos1, expandRatio)
         drawCircleFun = lambda pos: drawCircle(wPtr, pos[0], objectSize)
+        drawTargetCircleFun = lambda pos: drawCircle(wPtr, pos[0], targetSize)
+        player1Traj, player2Traj, player3Traj = drawCircleFun(playerPos1), drawCircleFun(
+            playerPos2), drawCircleFun(playerPos3)
+        target1Traj = drawTargetCircleFun(targetPos1)
+        if targetNum[i] == 2:
+            targetPos2 = expandCoordination(targetPos2, expandRatio)
+            target2Traj = drawTargetCircleFun(targetPos2)
+        if targetNum[i] == 4:
+            targetPos2 = expandCoordination(targetPos2, expandRatio)
+            targetPos3 = expandCoordination(targetPos3, expandRatio)
+            targetPos4 = expandCoordination(targetPos4, expandRatio)
+            target2Traj, target3Traj, target4Traj = drawTargetCircleFun(targetPos2), drawTargetCircleFun(targetPos3), drawTargetCircleFun(targetPos4)
 
-        player1Traj, player2Traj, player3Traj, sheep1Traj, sheep2Traj = drawCircleFun(playerPos1), drawCircleFun(
-            playerPos2), drawCircleFun(playerPos3), drawCircleFun(sheepPos1), drawCircleFun(sheepPos2),
-
-        setColorFun = lambda traj: traj.setFillColor('black')
-        setColorFun(player1Traj)
-        setColorFun(player2Traj)
-        setColorFun(player3Traj)
-        setColorFun(sheep1Traj)
-        setColorFun(sheep2Traj)
-        # player1Traj.setFillColor('blue')
-        # player2Traj.setFillColor('red')
-        # player3Traj.setFillColor('green')
-        # sheep1Traj.setFillColor('orange')
-        # sheep2Traj.setFillColor('orange')
+        # setColorFun = lambda traj: traj.setFillColor('black')
+        # setColorFun(player1Traj)
+        # setColorFun(player2Traj)
+        # setColorFun(player3Traj)
+        # setColorFun(target1Traj)
+        # setColorFun(target2Traj)
+        player1Traj.setFillColor('red')
+        player2Traj.setFillColor('blue')
+        player3Traj.setFillColor('green')
+        target1Traj.setFillColor('orange')
+        if targetNum[i] == 2:
+            target2Traj.setFillColor('DarkOrange')
+        if targetNum[i] == 4:
+            target2Traj.setFillColor('DarkOrange')
+            target3Traj.setFillColor('SandyBrown')
+            target4Traj.setFillColor('goldenrod')
+        # 'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79); 'goldenrod1', (255, 193, 37)
 
         player1Traj.autoDraw = True
         player2Traj.autoDraw = True
         player3Traj.autoDraw = True
-        sheep1Traj.autoDraw = True
-        sheep2Traj.autoDraw = True
-        keys = []
-        for x, y, z, a, b in zip(playerPos1, playerPos2, playerPos3, sheepPos1, sheepPos2):
-            for t in range(showTime):
+        target1Traj.autoDraw = True
+        if targetNum[i] == 2:
+            target2Traj.autoDraw = True
+        if targetNum[i] == 4:
+            target2Traj.autoDraw = True
+            target3Traj.autoDraw = True
+            target4Traj.autoDraw = True
+
+        stepCount = 0
+        if targetNum[i] == 1:
+            for x, y, z, a in zip(playerPos1, playerPos2, playerPos3, targetPos1):
+                stepCount += 1
                 player1Traj.setPos(x)
                 player2Traj.setPos(y)
                 player3Traj.setPos(z)
-                sheep1Traj.setPos(a)
-                sheep2Traj.setPos(b)
+                target1Traj.setPos(a)
                 wPtr.flip()
-                core.wait(moveTime)
+                core.wait(waitTime)
                 keys = event.getKeys()
-            if keys:
-                print(keys)
-                break
-
+                if keys:
+                    print('press:', keys)
+                    break
+        if targetNum[i] == 2:
+            for x, y, z, a, b in zip(playerPos1, playerPos2, playerPos3, targetPos1, targetPos2):
+                stepCount += 1
+                player1Traj.setPos(x)
+                player2Traj.setPos(y)
+                player3Traj.setPos(z)
+                target1Traj.setPos(a)
+                target2Traj.setPos(b)
+                wPtr.flip()
+                core.wait(waitTime)
+                keys = event.getKeys()
+                if keys:
+                    print('press:', keys)
+                    break
+        if targetNum[i] == 4:
+            for x, y, z, a, b, c, d in zip(playerPos1, playerPos2, playerPos3, targetPos1, targetPos2, targetPos3, targetPos4):
+                stepCount += 1
+                player1Traj.setPos(x)
+                player2Traj.setPos(y)
+                player3Traj.setPos(z)
+                target1Traj.setPos(a)
+                target2Traj.setPos(b)
+                target3Traj.setPos(c)
+                target4Traj.setPos(d)
+                wPtr.flip()
+                core.wait(waitTime)
+                keys = event.getKeys()
+                if keys:
+                    print('press:', keys)
+                    break
+        print('stop step:', stepCount)
         player1Traj.autoDraw = False
         player2Traj.autoDraw = False
         player3Traj.autoDraw = False
-        sheep1Traj.autoDraw = False
-        sheep2Traj.autoDraw = False
+        target1Traj.autoDraw = False
+        if targetNum[i] == 2:
+            target2Traj.autoDraw = False
+        if targetNum[i] == 4:
+            target2Traj.autoDraw = False
+            target3Traj.autoDraw = False
+            target4Traj.autoDraw = False
         event.waitKeys()
 
     wPtr.flip()

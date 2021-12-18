@@ -336,7 +336,7 @@ class ApplyEnvironForce:
 
 class IntegrateState:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList, getVelFromAgentState,
-                 getPosFromAgentState, damping=0.25, dt=0.045):
+                 getPosFromAgentState, damping=0.25, dt=0.1):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping
@@ -478,6 +478,8 @@ class ReshapeActionVariousForce:
         actionY = action[3] - action[4]
         actionReshaped = np.array([actionX, actionY]) * sensitivity
         return actionReshaped
+
+
 class ReshapeHumanAction:
     def __init__(self):
         self.actionDim = 2
@@ -512,3 +514,16 @@ class BuildGaussianFixCov:
 
 def sampleFromContinuousSpace(distribution):
         return distribution.rvs()
+
+
+class ComposeCentralControlPolicyByGaussianOnDeterministicAction:
+    def __init__(self, reshapeAction, observe, actOneStepOneModel, buildGaussian):
+        self.reshapeAction = reshapeAction
+        self.observe = observe
+        self.actOneStepOneModel = actOneStepOneModel
+        self.buildGaussian = buildGaussian
+
+    def __call__(self, individualModels, numAgentsInWe):
+        centralControlPolicy = lambda state: [self.buildGaussian(tuple(self.reshapeAction(
+            self.actOneStepOneModel(individualModels[agentId], self.observe(state))))) for agentId in range(numAgentsInWe)]
+        return centralControlPolicy
