@@ -42,7 +42,6 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-
     mapSize = 1.0
     displaySize = 1.0
     minDistance = mapSize * 1 / 3

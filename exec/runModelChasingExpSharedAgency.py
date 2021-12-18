@@ -15,8 +15,8 @@ from pygame.color import THECOLORS
 from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, \
     DrawAttributionTrail, DrawImageWithJoysticksCheck, DrawNewStateWithBlocks
 from src.writer import WriteDataFrameToCSV
-from src.trial import NewtonChaseTrialAllCondtionVariouSpeedForModel, isAnyKilled, CheckTerminationOfTrial, RecordEatenNumber
-from src.experiment import NewtonExperiment
+from src.trial import NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency, isAnyKilled, CheckTerminationOfTrial, RecordEatenNumber
+from src.experiment import NewtonExperimentWithResetIntention
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy, actByPolicyTrainNoNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 from src.mathTools.distribution import sampleFromDistribution,  SoftDistribution, BuildGaussianFixCov, sampleFromContinuousSpace
@@ -29,7 +29,7 @@ from src.inference.intention import UpdateIntention
 from src.inference.percept import SampleNoisyAction, PerceptImaginedWeAction
 from src.inference.inference import CalUncommittedAgentsPolicyLikelihood, CalCommittedAgentsContinuousPolicyLikelihood, InferOneStep
 from src.MDPChasing.state import getStateOrActionFirstPersonPerspective, getStateOrActionThirdPersonPerspective
-from src.generateAction.imaginedWeSampleAction import PolicyForUncommittedAgent, PolicyForCommittedAgent, GetActionFromJointActionDistribution, HierarchyPolicyForCommittedAgent, SampleIndividualActionGivenIntention, GetIntensionOnChangableIntention, SampleActionOnFixedIntention, SampleActionMultiagent
+from src.generateAction.imaginedWeSampleAction import PolicyForUncommittedAgent, PolicyForCommittedAgent, GetActionFromJointActionDistribution, SampleIndividualActionGivenIntention, SampleActionOnChangableIntention
 from src.sampleTrajectoryTools.resetObjectsForMultipleTrjaectory import RecordValuesForObjects, ResetObjects, GetObjectsValuesOfAttributes
 
 
@@ -38,7 +38,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    manipulatedVariables['sheepNums'] = [1]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
@@ -130,7 +130,7 @@ def main():
         perceptAction = PerceptImaginedWeAction(possibleWolvesIds, perceptSelfAction, perceptOtherAction)
 
         # Policy Likelihood function: Wolf Centrol Control NN Policy Given Intention
-        # ------------ model ------------------------
+        # ------------ wolf model -------------
         weModelsListBaseOnNumInWe = []
         observeListBaseOnNumInWe = []
         for numAgentInWe in range(numWolves, numWolves + 1):
@@ -182,8 +182,6 @@ def main():
         entitiesMovableList = [True] * numAgents + [False] * numBlocks
         massList = [1.0] * numEntities
 
-        # reshapeHumanAction = ReshapeHumanAction()
-        # reshapeSheepAction = ReshapeSheepAction()
         getCollisionForce = GetCollisionForce()
         applyActionForce = ApplyActionForce(wolvesID, sheepsID, entitiesMovableList)
         applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList, getCollisionForce,
@@ -200,8 +198,7 @@ def main():
         composeCentralControlPolicy = lambda observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction(reshapeAction,
             observe, actOneStepOneModelWolf, buildGaussian)
         wolvesCentralControlPolicies = [composeCentralControlPolicy(observeListBaseOnNumInWe[numAgentsInWe - 3])(
-            weModelsListBaseOnNumInWe[numAgentsInWe - 3], numAgentsInWe)
-                                        for numAgentsInWe in range(numWolves, numWolves + 1)]
+            weModelsListBaseOnNumInWe[numAgentsInWe - 3], numAgentsInWe) for numAgentsInWe in range(numWolves, numWolves + 1)]
         # wolvesCentralControlPolicies = [composeCentralControlPolicy(observeListBaseOnNumInWe[numAgentsInWe - 2])(weModelsListBaseOnNumInWe[numAgentsInWe - 2], numAgentsInWe)
         # for numAgentsInWe in range(2, numWolves + 1)]
         centralControlPolicyListBasedOnNumAgentsInWe = wolvesCentralControlPolicies  # 0 for two agents in We, 1 for three agents...
@@ -252,6 +249,45 @@ def main():
                             for intentionPrior, inferIntentionOneStep in
                             zip(wolvesIntentionPriors, inferIntentionOneStepList)]
 
+        # Wolves Generate Action
+        covForPlanning = [0.03 ** 2 for _ in range(actionDimReshaped)]
+        buildGaussianForPlanning = BuildGaussianFixCov(covForPlanning)
+        composeCentralControlPolicyForPlanning = lambda \
+            observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction \
+            (reshapeAction, observe, actOneStepOneModelWolf, buildGaussianForPlanning)
+        wolvesCentralControlPoliciesForPlanning = [composeCentralControlPolicyForPlanning(
+            observeListBaseOnNumInWe[numAgentsInWe - 3])(weModelsListBaseOnNumInWe[numAgentsInWe - 3],
+                                                         numAgentsInWe)
+                                                   for numAgentsInWe in range(numWolves, numWolves + 1)]
+
+        centralControlPolicyListBasedOnNumAgentsInWeForPlanning = wolvesCentralControlPoliciesForPlanning  # 0 for two agents in We, 1 for three agents...
+        softPolicyInPlanning = lambda distribution: distribution
+        policyForCommittedAgentInPlanning = PolicyForCommittedAgent(
+            centralControlPolicyListBasedOnNumAgentsInWeForPlanning, softPolicyInPlanning,
+            getStateThirdPersonPerspective)
+
+        policyForUncommittedAgentInPlanning = PolicyForUncommittedAgent(possibleWolvesIds, randomPolicy,
+                                                                        softPolicyInPlanning,
+                                                                        getStateFirstPersonPerspective)
+
+        def wolfChooseActionMethod(individualContinuousDistributions):
+            centralControlAction = tuple([tuple(sampleFromContinuousSpace(distribution))
+                                          for distribution in individualContinuousDistributions])
+            return centralControlAction
+
+        getSelfActionThirdPersonPerspective = lambda weIds, selfId: list(weIds).index(selfId)
+        chooseCommittedAction = GetActionFromJointActionDistribution(wolfChooseActionMethod,
+                                                                     getSelfActionThirdPersonPerspective)
+        chooseUncommittedAction = sampleFromDistribution
+        wolvesSampleIndividualActionGivenIntentionList = [
+            SampleIndividualActionGivenIntention(selfId, policyForCommittedAgentInPlanning,
+                                                 policyForUncommittedAgentInPlanning, chooseCommittedAction,
+                                                 chooseUncommittedAction) for selfId in possibleWolvesIds]
+        wolvesSampleActions = [
+            SampleActionOnChangableIntention(updateIntention, wolvesSampleIndividualActionGivenIntention)
+            for updateIntention, wolvesSampleIndividualActionGivenIntention in
+            zip(updateIntentions, wolvesSampleIndividualActionGivenIntentionList)]
+
         # reset intention and adjuste intention prior attributes tools for multiple trajectory
         intentionResetAttributes = ['timeStep', 'lastState', 'lastAction', 'intentionPrior', 'formerIntentionPriors']
         intentionResetAttributeValues = [
@@ -259,6 +295,7 @@ def main():
             for intentionPrior in wolvesIntentionPriors]
         resetIntentions = ResetObjects(intentionResetAttributeValues, updateIntentions)
 
+        # ------------ sheep model -------------
         def loadPolicyOneCondition(numSheeps, sheepConcern):
             # -----------observe--------
             if sheepConcern == 'self':
@@ -266,20 +303,10 @@ def main():
             if sheepConcern == 'all':
                 numSheepToObserve = numSheeps
 
-            observeOneAgent1 = lambda agentID, sId: Observe(agentID, wolvesID, sId, blocksID, getPosFromAgentState,
-                                                            getVelFromAgentState)
-            observeOneAgent = ft.partial(observeOneAgent1, sId=sheepsID)
-            observeOne = lambda state, num: [observeOneAgent(agentID)(state) for agentID in range(num)]
-            observe = ft.partial(observeOne, num=numAgents)
-            initObsForParams = observe(reset(numSheeps))
-            obsShape = [initObsForParams[obsID].shape[0] for obsID in range(len(initObsForParams))]
-
             wolvesIDForSheepObserve = list(range(numWolves))
             sheepsIDForSheepObserve = list(range(numWolves, numSheepToObserve + numWolves))
-            blocksIDForSheepObserve = list(
-                range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
-            observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId,
-                                                                    blocksIDForSheepObserve,
+            blocksIDForSheepObserve = list(range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
+            observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId, blocksIDForSheepObserve,
                                                                     getPosFromAgentState, getVelFromAgentState)
             observeOneAgentForSheep = ft.partial(observeOneAgentForSheep1, sId=sheepsIDForSheepObserve)
             observeOneForSheep = lambda state, num: [observeOneAgentForSheep(agentID)(state) for agentID in
@@ -300,7 +327,7 @@ def main():
             actionDim = worldDim * 2 + 1
             layerWidth = [128, 128]
 
-            # -----------model--------
+            # -----------restore model--------
             modelFolderName = 'withoutWall3wolvesForModel'
             # modelFolderName = 'withoutWall2wolves'
 
@@ -309,9 +336,6 @@ def main():
             maxTimeStep = 75
             modelSheepSpeed = 1.0
 
-            buildMADDPGModels = BuildMADDPGModels(actionDim, numAgents, obsShape)
-            wolfModelsList = [buildMADDPGModels(layerWidth, agentID) for agentID in range(numWolves)]
-
             buildSheepMADDPGModels = BuildMADDPGModels(actionDim, numWolves + numSheepToObserve, obsSheepShape)
             sheepModelsListAll = [buildSheepMADDPGModels(layerWidth, agentID) for agentID in
                                   range(numWolves, numWolves + numSheepToObserve)]
@@ -319,52 +343,30 @@ def main():
                                   range(numWolves, numWolves + numSheepToObserve) for i in range(numSheeps)]
 
             modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
-            wolfFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves,
-                                                                                                          numSheeps,
-                                                                                                          numBlocks,
-                                                                                                          maxEpisode,
-                                                                                                          maxTimeStep,
-                                                                                                          modelSheepSpeed)
-            sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves,
-                                                                                                              numBlocks,
-                                                                                                              maxEpisode,
-                                                                                                              maxTimeStep,
-                                                                                                              modelSheepSpeed)
+            sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(
+                numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
             sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(
                 numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
 
-            wolfModelPaths = [os.path.join(modelFolder, wolfFileName + str(i) + str(evaluateEpisode) + 'eps') for i in
-                              range(numWolves)]
-            sheepModelPathsAll = [os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps')
-                                  for i in range(numWolves, numWolves + numSheepToObserve)]
-            sheepModelPathsSep = [
-                os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileNameSep + str(evaluateEpisode) + 'eps') for i
-                in range(numSheeps)]
+            sheepModelPathsAll = [os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numWolves + numSheepToObserve)]
+            sheepModelPathsSep = [ os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileNameSep + str(evaluateEpisode) + 'eps') for i in range(numSheeps)]
 
             actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
-
-            [restoreVariables(model, path) for model, path in zip(wolfModelsList, wolfModelPaths)]
-            wolfPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in
-                                                          wolfModelsList]
-            wolfPolicyOneCondition = ft.partial(wolfPolicyFun, obs=observe)
 
             if numSheepToObserve == 1:
                 [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
                 sheepPolicyFun = lambda allAgentsStates: list(
-                    [actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in
-                     enumerate(sheepModelsListSep)])
+                    [actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
                 sheepPolicyOneCondition = sheepPolicyFun
             else:
                 [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model
-                                                               in sheepModelsListAll]
+                sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
                 sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
-            return sheepPolicyOneCondition, wolfPolicyOneCondition
-        for sheepConcern in manipulatedVariables['sheepConcern']:
-            sheepPolicy, wolfPolicy = loadPolicyOneCondition(numSheeps, sheepConcern)
-            allSheepPolicy.update({(numSheeps, sheepConcern): sheepPolicy})
-            allWolfPolicy.update({(numSheeps, sheepConcern): wolfPolicy})
+            return sheepPolicyOneCondition
 
+        for sheepConcern in manipulatedVariables['sheepConcern']:
+            sheepPolicy = loadPolicyOneCondition(numSheeps, sheepConcern)
+            allSheepPolicy.update({(numSheeps, sheepConcern): sheepPolicy})
 
         stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize], [-displaySize, displaySize])
         def checkBoudary(agentState):
@@ -381,7 +383,7 @@ def main():
     checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
     killzone = wolfSize + sheepSize
     recordEaten = RecordEatenNumber(isAnyKilled)
-    modelController = allWolfPolicy
+    modelController = wolvesSampleActions
     # humanController = JoyStickForceControllers()
     # drawImageBoth = DrawImageWithJoysticksCheck(screen,humanController.joystickList)
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
@@ -390,12 +392,12 @@ def main():
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
     drawImage = DrawImage(screen)
-    trial = NewtonChaseTrialAllCondtionVariouSpeedForModel(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
+    trial = NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                            drawNewState, checkTerminationOfTrial, recordEaten, modelController,
                                                            getEntityPos, getEntityVel, allSheepPolicy, transit)
 
     hasRest = False  # True
-    experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, drawImage)
+    experiment = NewtonExperimentWithResetIntention(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, resetIntentions, drawImage)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     # drawImageBoth(introductionImage)
     block = 1
