@@ -75,11 +75,11 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
             remainningTime = max(0, finishTime - currentStopwatch)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            wolfPolicy = self.modelController[sheepNums, sheepConcern]
-            humanAction = wolfPolicy(state)
+            wolfAction = [sampleAction(state) for sampleAction in self.modelController]
+            print(wolfAction)
             sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
             sheepAction = sheepPolicy(state)
-            nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
+            nextState = self.transit(state, wolfAction, sheepAction, wolfForce, sheepForce)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pause = True
@@ -90,7 +90,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
             score = hunterFlag
             self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
             pg.display.update()
-            action = humanAction + sheepAction
+            action = wolfAction + sheepAction
             trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)

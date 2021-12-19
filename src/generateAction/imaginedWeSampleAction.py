@@ -99,7 +99,9 @@ class SampleActionOnChangableIntention:
     def __call__(self, state):
         intention = self.updateIntention(state)
         individualAction = self.sampleIndividualActionGivenIntention(state, intention)
-        return individualAction 
+        return individualAction
+
+
 class GetIntensionOnChangableIntention:
     def __init__(self, updateIntention, sampleIndividualActionGivenIntention):
         self.updateIntention= updateIntention
@@ -107,7 +109,9 @@ class GetIntensionOnChangableIntention:
     def __call__(self, state):
         intention = self.updateIntention(state)
         # individualAction = self.sampleIndividualActionGivenIntention(state, intention)
-        return intention 
+        return intention
+
+
 class SampleActionOnFixedIntention:
     def __init__(self, selfId, fixedIntention, policy, chooseActionMethod, blocksId = []):
         self.selfId = selfId

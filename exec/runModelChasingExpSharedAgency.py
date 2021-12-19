@@ -155,7 +155,7 @@ def main():
             wolfModelsList = [buildWolfModels(layerWidthForWolf, agentID) for agentID in range(numAgentInWe)]
 
             modelFolderName = 'withoutWall3wolvesForModel'
-            modelFolder = os.path.join(dirName, '..', '..', 'model', modelFolderName)
+            modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
             numBlocks = 0
             maxEpisode = 60000
             maxTimeStep = 75
@@ -194,7 +194,8 @@ def main():
         buildGaussian = BuildGaussianFixCov(cov)
         actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoNoisy)
         # actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoisy)
-        reshapeAction = ReshapeHumanAction()
+        # reshapeAction = ReshapeHumanAction()
+        reshapeAction = lambda action: action
         composeCentralControlPolicy = lambda observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction(reshapeAction,
             observe, actOneStepOneModelWolf, buildGaussian)
         wolvesCentralControlPolicies = [composeCentralControlPolicy(observeListBaseOnNumInWe[numAgentsInWe - 3])(
@@ -275,6 +276,7 @@ def main():
                                           for distribution in individualContinuousDistributions])
             return centralControlAction
 
+
         getSelfActionThirdPersonPerspective = lambda weIds, selfId: list(weIds).index(selfId)
         chooseCommittedAction = GetActionFromJointActionDistribution(wolfChooseActionMethod,
                                                                      getSelfActionThirdPersonPerspective)
@@ -283,8 +285,7 @@ def main():
             SampleIndividualActionGivenIntention(selfId, policyForCommittedAgentInPlanning,
                                                  policyForUncommittedAgentInPlanning, chooseCommittedAction,
                                                  chooseUncommittedAction) for selfId in possibleWolvesIds]
-        wolvesSampleActions = [
-            SampleActionOnChangableIntention(updateIntention, wolvesSampleIndividualActionGivenIntention)
+        wolvesSampleActions = [SampleActionOnChangableIntention(updateIntention, wolvesSampleIndividualActionGivenIntention)
             for updateIntention, wolvesSampleIndividualActionGivenIntention in
             zip(updateIntentions, wolvesSampleIndividualActionGivenIntentionList)]
 
