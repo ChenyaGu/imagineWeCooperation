@@ -76,7 +76,6 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
             wolfAction = [sampleAction(state) for sampleAction in self.modelController]
-            print(wolfAction)
             sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
             sheepAction = sheepPolicy(state)
             nextState = self.transit(state, wolfAction, sheepAction, wolfForce, sheepForce)

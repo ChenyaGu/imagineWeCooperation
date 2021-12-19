@@ -194,8 +194,7 @@ def main():
         buildGaussian = BuildGaussianFixCov(cov)
         actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoNoisy)
         # actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoisy)
-        # reshapeAction = ReshapeHumanAction()
-        reshapeAction = lambda action: action
+        reshapeAction = ReshapeHumanAction()
         composeCentralControlPolicy = lambda observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction(reshapeAction,
             observe, actOneStepOneModelWolf, buildGaussian)
         wolvesCentralControlPolicies = [composeCentralControlPolicy(observeListBaseOnNumInWe[numAgentsInWe - 3])(
@@ -374,9 +373,10 @@ def main():
             newState = stayInBoundaryByReflectVelocity(getPosFromAgentState(agentState), getVelFromAgentState(agentState))
             return newState
         checkAllAgents = lambda states: [checkBoudary(agentState) for agentState in states]
-        reShapeAction = ReshapeActionVariousForce()
+        reShapeWolfAction = lambda action, force: action
+        reShapeSheepAction = ReshapeActionVariousForce()
         noiseAction = lambda state: sampleFromContinuousSpace(buildGaussian(tuple(state)))
-        transit = TransitMultiAgentChasingForExpWithNoise(reShapeAction, reShapeAction, applyActionForce,
+        transit = TransitMultiAgentChasingForExpWithNoise(reShapeWolfAction, reShapeSheepAction, applyActionForce,
                                                           applyEnvironForce, integrateState, checkAllAgents,
                                                           noiseAction)
         # transit = TransitMultiAgentChasingForExpVariousForce(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
