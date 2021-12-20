@@ -42,7 +42,7 @@ def main():
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 20
+    trailNumEachCondition = 220
     deviationFor2DAction = 1.0
     rationalityBetaInInference = 1.0
     valuePriorEndTime = -100
@@ -294,6 +294,10 @@ def main():
             dict(zip(intentionResetAttributes, [0, None, None, intentionPrior, [intentionPrior]]))
             for intentionPrior in wolvesIntentionPriors]
         resetIntentions = ResetObjects(intentionResetAttributeValues, updateIntentions)
+        returnAttributes = ['formerIntentionPriors']
+        getIntentionDistributions = GetObjectsValuesOfAttributes(returnAttributes, updateIntentions)
+        attributesToRecord = ['lastAction']
+        recordActionForUpdateIntention = RecordValuesForObjects(attributesToRecord, updateIntentions)
 
         # ------------ sheep model -------------
         def loadPolicyOneCondition(numSheeps, sheepConcern):
@@ -395,7 +399,7 @@ def main():
     drawImage = DrawImage(screen)
     trial = NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                            drawNewState, checkTerminationOfTrial, recordEaten, modelController,
-                                                           getEntityPos, getEntityVel, allSheepPolicy, transit)
+                                                           getEntityPos, getEntityVel, allSheepPolicy, transit, getIntentionDistributions, recordActionForUpdateIntention)
 
     hasRest = False  # True
     experiment = NewtonExperimentWithResetIntention(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, resetIntentions, drawImage)

@@ -13,7 +13,8 @@ import random
 
 class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
     def __init__(self, screen, killzone, targetColors, numOfWolves, numOfBlocks, stopwatchEvent, drawNewState,
-                 checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit):
+                 checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy,
+                 transit, getIntentionDistributions, recordActionForUpdateIntention):
         self.screen = screen
         self.killzone = killzone
         self.targetColors = targetColors
@@ -29,6 +30,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
         self.getEntityVel = getEntityVel
         self.allSheepPolicy = allSheepPolicy
         self.transit = transit
+        self.getIntentionDistributions = getIntentionDistributions
+        self.recordActionForUpdateIntention = recordActionForUpdateIntention
 
     def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
@@ -90,13 +93,16 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
             self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
             pg.display.update()
             action = wolfAction + sheepAction
+            self.recordActionForUpdateIntention([action])
             trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)
             pause = self.checkTerminationOfTrial(currentStopwatch)
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
-        pickleResults['trajectory'] = trajectory
+        intentionDistributions = self.getIntentionDistributions()
+        trajectoryWithIntentionDists = [tuple(list(SASRPair) + list(intentionDist)) for SASRPair, intentionDist in zip(trajectory, intentionDistributions)]
+        pickleResults['trajectory'] = trajectoryWithIntentionDists
         results["trialTime"] = wholeResponseTime
         results["hunterFlag"] = str(hunterFlag)
         results["sheepEatenFlag"] = str(eatenFlag)

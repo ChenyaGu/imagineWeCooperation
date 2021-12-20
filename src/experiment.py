@@ -21,7 +21,6 @@ class NewtonExperimentWithResetIntention():
         # for trialIndex in range(len(trailCondtions)):
         pickleDataList = []
         for condition in trailCondtions:
-            # condition = trailCondtions[trialIndex]
             print('trial', trialIndex + 1)
             print(condition)
             sheepNums = condition['sheepNums']
@@ -33,6 +32,7 @@ class NewtonExperimentWithResetIntention():
             result["sheepNums"] = sheepNums
             result["totalScore"] = str(totalScore)
             pickleResult['trialIndex'] = trialIndex
+            pickleResult['Name'] = self.experimentValues["name"]
             response = self.experimentValues.copy()
             response.update(result)
             pickleDataList.append(pickleResult)

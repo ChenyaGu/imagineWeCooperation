@@ -259,14 +259,16 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
 # print(trajectoryWithIntentionDists[0][3],trajectoryWithIntentionDists[-1][3])
 # trajectoryFixedParameters = {'maxRunningSteps': maxRunningSteps}
 if __name__ == "__main__":
-
-
     dataPath = os.path.join(dirName,'..','..','results')
+
     # loadDataPath = os.path.join(dataPath,'rawResults')
     # saveDataPath =  os.path.join(dataPath,'resultsWithIntension')
 
     loadDataPath = os.path.join(dataPath,'rawMachineResults')
     saveDataPath = os.path.join(dataPath,'machineResultsWithIntention')
+
+    # loadDataPath = os.path.join(dataPath,'testFolderIn')
+    # saveDataPath = os.path.join(dataPath,'testFolderOut')
 
     # resultPath = glob.glob(os.path.join(loadDataPath, '*.pickle'))
     fileNameList = os.listdir(loadDataPath)
