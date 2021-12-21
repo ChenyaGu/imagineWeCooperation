@@ -64,15 +64,18 @@ class UpdateIntention:
 
     def __call__(self, state):
         if self.timeStep <= self.endAdjustedTimeStep:
-            adjustedIntentionPrior = self.adjustIntentionPrior(self.intentionPrior, state)
+            adjustedIntentionPrior = self.adjustIntentionPrior(self.intentionPrior, state) + 1e-100
         else:
             adjustedIntentionPrior = self.intentionPrior.copy()
-
+        for key in adjustedIntentionPrior:
+            adjustedIntentionPrior[key] += 1e-100
         if self.timeStep == 0:
             intentionPosterior = adjustedIntentionPrior.copy()
+
         else:
             perceivedAction = self.perceptAction(self.lastAction)
             intentionPosterior = self.inferIntentionOneStep(adjustedIntentionPrior, self.lastState, perceivedAction)
+        print('adjustedIntentionPrior', adjustedIntentionPrior)
         intention = self.chooseIntention(intentionPosterior)
 
         self.lastState = state.copy()

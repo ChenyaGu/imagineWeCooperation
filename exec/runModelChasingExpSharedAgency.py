@@ -38,7 +38,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1]
+    manipulatedVariables['sheepNums'] = [2]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
@@ -82,7 +82,7 @@ def main():
     targetRadius = int(sheepSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     blockRadius = int(blockSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
-    finishTime = 1000 * 18
+    finishTime = 1000 * 26
     stopwatchEvent = pg.USEREVENT + 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)

@@ -264,11 +264,11 @@ if __name__ == "__main__":
     # loadDataPath = os.path.join(dataPath,'rawResults')
     # saveDataPath =  os.path.join(dataPath,'resultsWithIntension')
 
-    loadDataPath = os.path.join(dataPath,'rawMachineResults')
-    saveDataPath = os.path.join(dataPath,'machineResultsWithIntention')
+    # loadDataPath = os.path.join(dataPath,'rawMachineResults')
+    # saveDataPath = os.path.join(dataPath,'machineResultsWithIntention')
 
-    # loadDataPath = os.path.join(dataPath,'testFolderIn')
-    # saveDataPath = os.path.join(dataPath,'testFolderOut')
+    loadDataPath = os.path.join(dataPath,'testFolderIn')
+    saveDataPath = os.path.join(dataPath,'testFolderOut')
 
     # resultPath = glob.glob(os.path.join(loadDataPath, '*.pickle'))
     fileNameList = os.listdir(loadDataPath)

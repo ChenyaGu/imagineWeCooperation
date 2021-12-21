@@ -111,13 +111,14 @@ def main():
     
     dataPath = os.path.join(dirName,'..','..','results')
     # loadDataPath = os.path.join(dataPath,'resultsWithIntension')
-    loadDataPath = os.path.join(dataPath,'machineResultsWithIntention')
+    # loadDataPath = os.path.join(dataPath,'machineResultsWithIntention')
+    loadDataPath = os.path.join(dataPath,'test')
 
     fileNameList = os.listdir(loadDataPath)
     rawPickleList = []
-    # targetFileNameList = fileNameList
-    x = 0
-    targetFileNameList = fileNameList[x:x+1]
+    targetFileNameList = fileNameList
+    # x = 0
+    # targetFileNameList = fileNameList[x:x+1]
     
     for fileName in targetFileNameList:
         print(fileName)

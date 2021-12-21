@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	fileFolder = os.path.join(dirName, '..', 'results')
+	fileFolder = os.path.join(dirName, '..', 'results','testFolderOut')
 	csvList = []
 	a = os.listdir(fileFolder)
 	for j in a:
@@ -105,9 +105,14 @@ if __name__=="__main__":
 	sns.set_style("whitegrid")		# darkgrid(Default), whitegrid, dark, white, ticks
 	f, ax = plt.subplots(figsize=(5, 5))
 	# barplot: Default: np.mean
-	sns.barplot(x='sheepNum', y='trialScore', data=dfSelfSheepData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Reds')
+	g = sns.barplot(x='sheepNum', y='trialScore', data=dfSelfSheepData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Reds')
 	# sns.barplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData, estimator=np.mean, ci=95, capsize=.05, errwidth=2, palette='Blues')
 	# sns.boxplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData)
+
+	for index, row in dfSelfAverageScore.iterrows():
+		g.text(index, row['trialScore']+2,round(row['trialScore'],2),color="black",ha="center")
+
+	# ax.set_yticks([0, 10, 20, 30, 40, 50, 60])
 
 	# 设置坐标轴下标的字体大小
 	plt.xticks(fontsize=10)

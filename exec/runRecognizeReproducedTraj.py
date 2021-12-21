@@ -60,12 +60,12 @@ def main():
     introText.autoDraw = False
 
     dirName = os.path.dirname(__file__)
-    csvName = 'test.csv'
+    csvName = 'Sharedagency2s.csv'
     fileName = os.path.join(dirName, '..', 'results', 'drawTraj', csvName)
     readFun = lambda key: readListCSV(fileName, key)
 
     trialNum = len(readCSV(fileName, 'name'))
-    startTrial = 3
+    startTrial = 10
     # -----target position pre-processing-----
     for i in range(startTrial, trialNum):
         print('trial', i + 1)
