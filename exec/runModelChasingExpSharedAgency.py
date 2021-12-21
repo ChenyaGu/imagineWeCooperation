@@ -42,7 +42,7 @@ def main():
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 220
+    trailNumEachCondition = 10
     deviationFor2DAction = 1.0
     rationalityBetaInInference = 1.0
     valuePriorEndTime = -100
@@ -82,7 +82,7 @@ def main():
     targetRadius = int(sheepSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     blockRadius = int(blockSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
-    finishTime = 1000 * 26
+    finishTime = 1000 * 25.5
     stopwatchEvent = pg.USEREVENT + 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)
@@ -190,7 +190,7 @@ def main():
                                         getVelFromAgentState, getPosFromAgentState)
 
         actionDimReshaped = 2
-        cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
+        cov = [3e-10 ** 2 for _ in range(actionDimReshaped)]
         buildGaussian = BuildGaussianFixCov(cov)
         actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoNoisy)
         # actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoisy)
