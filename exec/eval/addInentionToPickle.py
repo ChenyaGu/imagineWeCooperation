@@ -173,7 +173,8 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
     variablesForAllWolves = [[intentionSpace] for intentionSpace in intentionSpacesForAllWolves]
     jointHypothesisSpaces = [pd.MultiIndex.from_product(variables, names=['intention']) for variables in variablesForAllWolves]
     concernedHypothesisVariable = ['intention']
-    priorDecayRate = 1
+    # priorDecayRate = 1  # record all prior
+    priorDecayRate = 0.7
     softPrior = SoftDistribution(priorDecayRate)
     inferIntentionOneStepList = [InferOneStep(jointHypothesisSpace, concernedHypothesisVariable, 
             calJointLikelihood, softPrior) for jointHypothesisSpace in jointHypothesisSpaces]
