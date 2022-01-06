@@ -10,8 +10,8 @@ import numpy as np
 import random
 import pygame as pg
 from pygame.color import THECOLORS
-from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, \
-    DrawAttributionTrail, DrawImageWithJoysticksCheck, DrawNewStateWithBlocks
+from src.visualization import DrawBackgroundWithStep, DrawNewStateWithBlocks, DrawImage, GiveExperimentFeedback, InitializeScreen, \
+    DrawAttributionTrail, DrawImageWithJoysticksCheck
 from src.controller import HumanController, ModelController, JoyStickForceControllers
 from src.writer import WriteDataFrameToCSV
 from src.trial import NewtonChaseTrialAllCondtionVariouSpeedForModel, isAnyKilled, CheckTerminationOfTrial, RecordEatenNumber
@@ -27,11 +27,11 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    manipulatedVariables['sheepNums'] = [4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 20
+    trailNumEachCondition = 10
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -233,11 +233,11 @@ def main():
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
 
-    drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
+    drawBackground = DrawBackgroundWithStep(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
     drawImage = DrawImage(screen)
     trial = NewtonChaseTrialAllCondtionVariouSpeedForModel(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
-                                                           drawNewState, checkTerminationOfTrial, recordEaten, modelController,
+                                                           drawNewState, recordEaten, modelController,
                                                            getEntityPos, getEntityVel, allSheepPolicy, transit)
 
     hasRest = False  # True

@@ -1,5 +1,4 @@
 import os
-import pickle
 import sys
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -235,7 +234,8 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
 
     for trajDict in trajDictList:
         trajectoryDictWithIntension = trajDict.copy()
-        if trajDict['condition']['sheepNums'] == numSheep:
+        # if trajDict['condition']['sheepNums'] == numSheep:
+        if trajDict['trialIndex'] == 52:
             trajectory = trajDict['trajectory']
             for state in trajectory:
                     action = state[1]
@@ -279,11 +279,12 @@ if __name__ == "__main__":
         print(fileName)
         pickleWithIntention = []
         data = loadFromPickle(os.path.join(loadDataPath,fileName))  
-        for numSheep in [1,2,4]:
+        for numSheep in [2]:
             trajWithIntentionList = calCulateIntenTion(data,numSheep,fileName)
             pickleWithIntention = pickleWithIntention + trajWithIntentionList
 
-        print(pickleWithIntention[0]['trajectory'][-1])
-        saveToPickle(pickleWithIntention, os.path.join(saveDataPath,fileName))
-        print('save:',os.path.join(saveDataPath,fileName))
+        print('all:', pickleWithIntention[0]['trajectory'])
+        print('-1:', pickleWithIntention[0]['trajectory'][-1])
+        # saveToPickle(pickleWithIntention, os.path.join(saveDataPath,fileName))
+        # print('save:',os.path.join(saveDataPath,fileName))
     # data = loadFromPickle(resultPath[0])  

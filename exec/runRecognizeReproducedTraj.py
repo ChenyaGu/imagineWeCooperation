@@ -3,7 +3,7 @@ from psychopy import visual, core, event
 import os
 import csv
 import json
-
+import numpy as np
 
 def drawCircle(wPtr, pos, size):
     circle = visual.Circle(win=wPtr, lineColor='grey', pos=pos, size=size)
@@ -47,10 +47,11 @@ def main():
     textHeight = 24
     objectSize = 30
     targetSize = 20
-    # waitTime = 0.08  # for model demo
-    waitTime = 0.03  # for human demo
+    waitTime = 0.08  # for model demo
+    # waitTime = 0.03  # for human demo
 
     wPtr = visual.Window(size=[768, 768], units='pix', fullscr=False)
+    myMouse = event.Mouse(visible=True, win=wPtr)
     introText = showText(wPtr, textHeight, 'Press ENTER to start', (0, 250))
     introText.autoDraw = True
     wPtr.flip()
@@ -58,14 +59,17 @@ def main():
     while 'return' not in keys:
         keys = event.getKeys()
     introText.autoDraw = False
+    timerText = showText(wPtr, 50, u'', (0, 0))  # 每个trial间的注视点
 
     dirName = os.path.dirname(__file__)
-    csvName = 'Sharedagency2s.csv'
+    csvName = 'Reduceaction4.csv'
     fileName = os.path.join(dirName, '..', 'results', 'drawTraj', csvName)
     readFun = lambda key: readListCSV(fileName, key)
 
     trialNum = len(readCSV(fileName, 'name'))
-    startTrial = 10
+    startTrial = 0
+    targetChoiceList = []
+    stepCountList = []
     # -----target position pre-processing-----
     for i in range(startTrial, trialNum):
         print('trial', i + 1)
@@ -120,22 +124,31 @@ def main():
             targetPos4 = expandCoordination(targetPos4, expandRatio)
             target2Traj, target3Traj, target4Traj = drawTargetCircleFun(targetPos2), drawTargetCircleFun(targetPos3), drawTargetCircleFun(targetPos4)
 
-        # setColorFun = lambda traj: traj.setFillColor('black')
+        # only color the players
+        setColorFun = lambda traj: traj.setFillColor('white')
         # setColorFun(player1Traj)
         # setColorFun(player2Traj)
         # setColorFun(player3Traj)
-        # setColorFun(target1Traj)
-        # setColorFun(target2Traj)
+        setColorFun(target1Traj)
+        if targetNum[i] == 2:
+            setColorFun(target2Traj)
+        if targetNum[i] == 4:
+            setColorFun(target2Traj)
+            setColorFun(target3Traj)
+            setColorFun(target4Traj)
+
         player1Traj.setFillColor('red')
         player2Traj.setFillColor('blue')
         player3Traj.setFillColor('green')
-        target1Traj.setFillColor('orange')
-        if targetNum[i] == 2:
-            target2Traj.setFillColor('DarkOrange')
-        if targetNum[i] == 4:
-            target2Traj.setFillColor('DarkOrange')
-            target3Traj.setFillColor('SandyBrown')
-            target4Traj.setFillColor('goldenrod')
+
+        # color all the objects for demo
+        # target1Traj.setFillColor('orange')
+        # if targetNum[i] == 2:
+        #     target2Traj.setFillColor('DarkOrange')
+        # if targetNum[i] == 4:
+        #     target2Traj.setFillColor('DarkOrange')
+        #     target3Traj.setFillColor('SandyBrown')
+        #     target4Traj.setFillColor('goldenrod')
         # 'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79); 'goldenrod1', (255, 193, 37)
 
         player1Traj.autoDraw = True
@@ -161,8 +174,9 @@ def main():
                 core.wait(waitTime)
                 keys = event.getKeys()
                 if keys:
-                    print('press:', keys)
+                    # print('press:', keys)
                     break
+
         if targetNum[i] == 2:
             for x, y, z, a, b in zip(playerPos1, playerPos2, playerPos3, targetPos1, targetPos2):
                 stepCount += 1
@@ -175,8 +189,17 @@ def main():
                 core.wait(waitTime)
                 keys = event.getKeys()
                 if keys:
-                    print('press:', keys)
+                    while True:
+                        if myMouse.isPressedIn(target1Traj):
+                            choice = 'target1'
+                            targetChoiceList.append(choice)
+                            break
+                        if myMouse.isPressedIn(target2Traj):
+                            choice = 'target2'
+                            targetChoiceList.append(choice)
+                            break
                     break
+
         if targetNum[i] == 4:
             for x, y, z, a, b, c, d in zip(playerPos1, playerPos2, playerPos3, targetPos1, targetPos2, targetPos3, targetPos4):
                 stepCount += 1
@@ -191,9 +214,28 @@ def main():
                 core.wait(waitTime)
                 keys = event.getKeys()
                 if keys:
-                    print('press:', keys)
+                    while True:
+                        if myMouse.isPressedIn(target1Traj):
+                            choice = 'target1'
+                            targetChoiceList.append(choice)
+                            break
+                        if myMouse.isPressedIn(target2Traj):
+                            choice = 'target2'
+                            targetChoiceList.append(choice)
+                            break
+                        if myMouse.isPressedIn(target3Traj):
+                            choice = 'target3'
+                            targetChoiceList.append(choice)
+                            break
+                        if myMouse.isPressedIn(target4Traj):
+                            choice = 'target4'
+                            targetChoiceList.append(choice)
+                            break
                     break
+
+        # print('choice:', choice)
         print('stop step:', stepCount)
+        stepCountList.append(stepCount)
         player1Traj.autoDraw = False
         player2Traj.autoDraw = False
         player3Traj.autoDraw = False
@@ -204,7 +246,22 @@ def main():
             target2Traj.autoDraw = False
             target3Traj.autoDraw = False
             target4Traj.autoDraw = False
-        event.waitKeys()
+
+        restTime = 5
+        restDuration = (trialNum-startTrial)/restTime
+        if np.mod((i-startTrial+1), restDuration) != 0:
+            dtimer = core.CountdownTimer(1)  # wait for 1s
+            while dtimer.getTime() > 0:
+                timerText.text = '+'
+                timerText.bold = True
+                timerText.draw()
+            wPtr.flip()
+        else:   # rest
+            restText = showText(wPtr, textHeight, 'Press Space to continue', (0, 300))
+            restText.autoDraw = True
+            wPtr.flip()
+            event.waitKeys()
+            restText.autoDraw = False
 
     wPtr.flip()
     event.waitKeys()

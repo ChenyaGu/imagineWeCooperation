@@ -12,8 +12,8 @@ import numpy as np
 import random
 import pygame as pg
 from pygame.color import THECOLORS
-from src.visualization import DrawBackground, DrawNewState, DrawImage, GiveExperimentFeedback, InitializeScreen, \
-    DrawAttributionTrail, DrawImageWithJoysticksCheck, DrawNewStateWithBlocks
+from src.visualization import DrawBackgroundWithStep, DrawNewStateWithBlocks, DrawImage, GiveExperimentFeedback, InitializeScreen, \
+    DrawAttributionTrail, DrawImageWithJoysticksCheck
 from src.writer import WriteDataFrameToCSV
 from src.trial import NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency, isAnyKilled, CheckTerminationOfTrial, RecordEatenNumber
 from src.experiment import NewtonExperimentWithResetIntention
@@ -42,7 +42,7 @@ def main():
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 220
+    trailNumEachCondition = 10
     deviationFor2DAction = 1.0
     rationalityBetaInInference = 1.0
     valuePriorEndTime = -100
@@ -82,7 +82,7 @@ def main():
     targetRadius = int(sheepSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     blockRadius = int(blockSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
-    finishTime = 1000 * 26
+    # finishTime = 1000 * 26
     stopwatchEvent = pg.USEREVENT + 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)
@@ -385,7 +385,7 @@ def main():
                                                           noiseAction)
         # transit = TransitMultiAgentChasingForExpVariousForce(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
 
-    checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
+    # checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)
     killzone = wolfSize + sheepSize
     recordEaten = RecordEatenNumber(isAnyKilled)
     modelController = wolvesSampleActions
@@ -394,11 +394,11 @@ def main():
     getEntityPos = lambda state, entityID: getPosFromAgentState(state[entityID])
     getEntityVel = lambda state, entityID: getVelFromAgentState(state[entityID])
 
-    drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
+    drawBackground = DrawBackgroundWithStep(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
     drawImage = DrawImage(screen)
     trial = NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
-                                                           drawNewState, checkTerminationOfTrial, recordEaten, modelController,
+                                                           drawNewState, recordEaten, modelController,
                                                            getEntityPos, getEntityVel, allSheepPolicy, transit, getIntentionDistributions, recordActionForUpdateIntention)
 
     hasRest = False  # True
@@ -408,7 +408,7 @@ def main():
     block = 1
     restTimes = 3  # the number of breaks in an experiment
     for i in range(block):
-        experiment(finishTime, AllConditions, restTimes)
+        experiment(AllConditions, restTimes)
         # giveExperimentFeedback(i, score)
         if i == block - 1:
             drawImage(finishImage)

@@ -13,7 +13,7 @@ import random
 
 class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
     def __init__(self, screen, killzone, targetColors, numOfWolves, numOfBlocks, stopwatchEvent, drawNewState,
-                 checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy,
+                 recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy,
                  transit, getIntentionDistributions, recordActionForUpdateIntention):
         self.screen = screen
         self.killzone = killzone
@@ -24,7 +24,6 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
         self.drawNewState = drawNewState
         self.stopwatchEvent = stopwatchEvent
         self.recordEaten = recordEaten
-        self.checkTerminationOfTrial = checkTerminationOfTrial
         self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos
         self.getEntityVel = getEntityVel
@@ -32,8 +31,9 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
         self.transit = transit
         self.getIntentionDistributions = getIntentionDistributions
         self.recordActionForUpdateIntention = recordActionForUpdateIntention
+        self.maxTrialStep = 370
 
-    def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
+    def __call__(self, initState, score, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
         sheepConcern = condition['sheepConcern']
         killZone = self.killzone
@@ -61,24 +61,30 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
         initBlockPositions = getBlockPos(initState)
         if initBlockPositions:
             results["blockPositions"] = str(initBlockPositions)
-        readyTime = 1000
+        # readyTime = 1000
         currentEatenFlag = [0] * len(initTargetPositions)
-        while readyTime > 0:
-            pg.time.delay(32)
-            self.drawNewState(targetColors, initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
-            drawText(self.screen, 'ready', THECOLORS['white'],
-                     (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
-            pg.display.update()
-            readyTime -= self.stopwatchUnit
+        # while readyTime > 0:
+        #     pg.time.delay(32)
+        #     self.drawNewState(targetColors, initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
+        #     drawText(self.screen, 'ready', THECOLORS['white'],
+        #              (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
+        #     pg.display.update()
+        #     readyTime -= self.stopwatchUnit
         initialTime = time.get_ticks()
         eatenFlag = [0] * len(initTargetPositions)
         hunterFlag = score
+        trialStep = -1
         while pause:
-            pg.time.delay(32)
-            remainningTime = max(0, finishTime - currentStopwatch)
+            trialStep += 1
+            # pg.time.delay(32)
+            # remainningTime = max(0, finishTime - currentStopwatch)
+            remainningStep = max(0, self.maxTrialStep - trialStep)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            wolfAction = [sampleAction(state) for sampleAction in self.modelController]
+            if np.mod(trialStep, 3) == 0:
+                wolfAction = [sampleAction(state) for sampleAction in self.modelController]
+            else:
+                wolfAction = wolfAction
             sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
             sheepAction = sheepPolicy(state)
             nextState = self.transit(state, wolfAction, sheepAction, wolfForce, sheepForce)
@@ -90,14 +96,16 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
             currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
             score = hunterFlag
-            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
+            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningStep, score, currentEatenFlag)
             pg.display.update()
             action = wolfAction + sheepAction
             self.recordActionForUpdateIntention([action])
             trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)
-            pause = self.checkTerminationOfTrial(currentStopwatch)
+            # pause = self.checkTerminationOfTrial(currentStopwatch)
+            if trialStep > self.maxTrialStep:
+                pause = False
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
         intentionDistributions = self.getIntentionDistributions()
@@ -156,7 +164,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
 
 class NewtonChaseTrialAllCondtionVariouSpeedForModel():
     def __init__(self, screen, killzone, targetColors, numOfWolves, numOfBlocks, stopwatchEvent, drawNewState,
-                 checkTerminationOfTrial, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit):
+                 recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit):
         self.screen = screen
         self.killzone = killzone
         self.targetColors = targetColors
@@ -166,12 +174,13 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         self.drawNewState = drawNewState
         self.stopwatchEvent = stopwatchEvent
         self.recordEaten = recordEaten
-        self.checkTerminationOfTrial = checkTerminationOfTrial
         self.stopwatchUnit = 100
         self.getEntityPos = getEntityPos
         self.getEntityVel = getEntityVel
         self.allSheepPolicy = allSheepPolicy
         self.transit = transit
+        self.maxTrialStep = 370
+
 
     def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
@@ -201,25 +210,31 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         initBlockPositions = getBlockPos(initState)
         if initBlockPositions:
             results["blockPositions"] = str(initBlockPositions)
-        readyTime = 1000
+        # readyTime = 1000
         currentEatenFlag = [0] * len(initTargetPositions)
-        while readyTime > 0:
-            pg.time.delay(32)
-            self.drawNewState(targetColors, initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
-            drawText(self.screen, 'ready', THECOLORS['white'],
-                     (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
-            pg.display.update()
-            readyTime -= self.stopwatchUnit
+        # while readyTime > 0:
+        #     pg.time.delay(32)
+        #     self.drawNewState(targetColors, initTargetPositions, initPlayerPositions, initBlockPositions, finishTime, score, currentEatenFlag)
+        #     drawText(self.screen, 'ready', THECOLORS['white'],
+        #              (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
+        #     pg.display.update()
+        #     readyTime -= self.stopwatchUnit
         initialTime = time.get_ticks()
         eatenFlag = [0] * len(initTargetPositions)
         hunterFlag = score
+        trialStep = -1
         while pause:
-            pg.time.delay(32)
-            remainningTime = max(0, finishTime - currentStopwatch)
+            trialStep += 1
+            # pg.time.delay(32)
+            # remainningTime = max(0, finishTime - currentStopwatch)
+            remainningStep = max(0, self.maxTrialStep - trialStep)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
             wolfPolicy = self.modelController[sheepNums, sheepConcern]
-            humanAction = wolfPolicy(state)
+            if np.mod(trialStep, 3) == 0:
+                humanAction = wolfPolicy(state)
+            else:
+                humanAction = humanAction
             sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
             sheepAction = sheepPolicy(state)
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
@@ -231,13 +246,15 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
             currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
             score = hunterFlag
-            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
+            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningStep, score, currentEatenFlag)
             pg.display.update()
             action = humanAction + sheepAction
             trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)
-            pause = self.checkTerminationOfTrial(currentStopwatch)
+            # pause = self.checkTerminationOfTrial(currentStopwatch)
+            if trialStep > self.maxTrialStep:
+                pause = False
         wholeResponseTime = time.get_ticks() - initialTime
         pg.event.set_blocked([pg.KEYDOWN, pg.KEYUP])
         pickleResults['trajectory'] = trajectory

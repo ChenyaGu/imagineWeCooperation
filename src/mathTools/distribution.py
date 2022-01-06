@@ -31,11 +31,13 @@ def sampleFromDistribution(distribution):
     selectedHypothesis = hypotheses[selectedIndex]
     return selectedHypothesis 
 
+
 class BuildGaussianFixCov:
     def __init__(self, cov):
         self.cov = cov
     def __call__(self, mean):
         return ss.multivariate_normal(mean, self.cov)
+
 
 def sampleFromContinuousSpace(distribution):
     return distribution.rvs() 

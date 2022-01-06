@@ -54,6 +54,31 @@ class GiveExperimentFeedback():
         pg.display.flip()
         pg.time.wait(3000)
 
+class DrawBackgroundWithStep():
+    def __init__(self, screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors):
+        self.screen = screen
+        self.gridSize = gridSize
+        self.leaveEdgeSpace = leaveEdgeSpace
+        self.widthLineStepSpace = np.int(screen.get_width() / (gridSize + 2 * self.leaveEdgeSpace))
+        self.heightLineStepSpace = np.int(screen.get_height() / (gridSize + 2 * self.leaveEdgeSpace))
+        self.backgroundColor = backgroundColor
+        self.textColorTuple = textColorTuple
+
+
+        self.playerColors = playerColors
+
+    def __call__(self, currentStep, currentScore):
+        self.screen.fill((0, 0, 0))
+        pg.draw.rect(self.screen, self.backgroundColor, pg.Rect(np.int(self.leaveEdgeSpace * self.widthLineStepSpace),np.int(self.leaveEdgeSpace * self.heightLineStepSpace),np.int(self.gridSize * self.widthLineStepSpace),np.int(self.gridSize * self.heightLineStepSpace)))
+
+        drawText(self.screen, 'Step: ' + str("%3.0f" % currentStep), THECOLORS['white'],
+                 (self.widthLineStepSpace * 5, self.widthLineStepSpace), 60)
+        # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
+        # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
+        drawText(self.screen, 'TotalScore: ' + str(np.sum(currentScore)), self.textColorTuple,
+                 (self.widthLineStepSpace * 25, self.widthLineStepSpace), 60)
+        return
+
 
 class DrawBackground():
     def __init__(self, screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors):

@@ -15,7 +15,7 @@ class NewtonExperimentWithResetIntention():
         self.resetIntentions = resetIntentions
         self.hasRest = hasRest
 
-    def __call__(self, finishTime, trailCondtions, restTimes):
+    def __call__(self, trailCondtions, restTimes):
         trialIndex = 0
         score = np.array([0]*self.experimentValues["numWolves"])
         # for trialIndex in range(len(trailCondtions)):
@@ -27,7 +27,7 @@ class NewtonExperimentWithResetIntention():
             initState = self.reset(sheepNums)
             currentStopwatch = 0
             pickleResult, result, finalState, score, totalScore, currentStopwatch, eatenFlag = self.trial(
-                initState, score, finishTime, currentStopwatch, trialIndex, condition)
+                initState, score, currentStopwatch, trialIndex, condition)
             self.resetIntentions()
             result["sheepNums"] = sheepNums
             result["totalScore"] = str(totalScore)
