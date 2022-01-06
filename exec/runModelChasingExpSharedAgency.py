@@ -82,11 +82,8 @@ def main():
     targetRadius = int(sheepSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     blockRadius = int(blockSize/(displaySize*2)*screenWidth*gridSize/(gridSize+2*leaveEdgeSpace))
     stopwatchUnit = 100
-<<<<<<< HEAD
+
     # finishTime = 1000 * 26
-=======
-    finishTime = 1000 * 25.5
->>>>>>> 539734e6d33aa2cc18e41131d5845ce0a4077846
     stopwatchEvent = pg.USEREVENT + 1
 
     pg.time.set_timer(stopwatchEvent, stopwatchUnit)
