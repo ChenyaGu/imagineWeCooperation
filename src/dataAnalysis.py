@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	fileFolder = os.path.join(dirName, '..', 'results','testFolderOut')
+	fileFolder = os.path.join(dirName, '..', 'results','testFolderIn')
 	csvList = []
 	a = os.listdir(fileFolder)
 	for j in a:

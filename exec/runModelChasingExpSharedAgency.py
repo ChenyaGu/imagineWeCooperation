@@ -42,7 +42,7 @@ def main():
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 10
+    trailNumEachCondition = 2
     deviationFor2DAction = 1.0
     rationalityBetaInInference = 1.0
     valuePriorEndTime = -100
@@ -191,7 +191,8 @@ def main():
                                         getVelFromAgentState, getPosFromAgentState)
 
         actionDimReshaped = 2
-        cov = [3e-10 ** 2 for _ in range(actionDimReshaped)]
+        cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
+        # buildGaussian = lambda x: x
         buildGaussian = BuildGaussianFixCov(cov)
         actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoNoisy)
         # actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoisy)
@@ -400,7 +401,8 @@ def main():
     drawImage = DrawImage(screen)
     trial = NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                            drawNewState, recordEaten, modelController,
-                                                           getEntityPos, getEntityVel, allSheepPolicy, transit, getIntentionDistributions, recordActionForUpdateIntention)
+                                                           getEntityPos, getEntityVel, allSheepPolicy,
+                                                           transit, getIntentionDistributions, recordActionForUpdateIntention)
 
     hasRest = False  # True
     experiment = NewtonExperimentWithResetIntention(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, resetIntentions, drawImage)

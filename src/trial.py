@@ -31,7 +31,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
         self.transit = transit
         self.getIntentionDistributions = getIntentionDistributions
         self.recordActionForUpdateIntention = recordActionForUpdateIntention
-        self.maxTrialStep = 370
+        self.maxTrialStep = 365
 
     def __call__(self, initState, score, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
@@ -96,9 +96,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
             currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
             score = hunterFlag
-
-            # self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
-            # pg.display.update()
+            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningStep, score, currentEatenFlag)
+            pg.display.update()
             action = wolfAction + sheepAction
             self.recordActionForUpdateIntention([action])
             trajectory.append((state, action, nextState))
@@ -180,8 +179,9 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         self.getEntityVel = getEntityVel
         self.allSheepPolicy = allSheepPolicy
         self.transit = transit
-        self.maxTrialStep = 370
-
+        self.maxTrialStep = 350
+        self.wolfActionUpdateInterval = 3
+        self.sheepActionUpdateInterval = 1
 
     def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
         sheepNums = condition['sheepNums']
@@ -232,12 +232,15 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
             wolfPolicy = self.modelController[sheepNums, sheepConcern]
-            if np.mod(trialStep, 3) == 0:
+            if np.mod(trialStep, self.wolfActionUpdateInterval) == 0:
                 humanAction = wolfPolicy(state)
             else:
                 humanAction = humanAction
             sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
-            sheepAction = sheepPolicy(state)
+            if np.mod(trialStep, self.sheepActionUpdateInterval) == 0:
+                sheepAction = sheepPolicy(state)
+            else:
+                sheepAction = sheepAction
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
