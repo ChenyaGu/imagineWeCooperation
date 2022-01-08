@@ -33,16 +33,20 @@ from src.generateAction.imaginedWeSampleAction import PolicyForUncommittedAgent,
 from src.sampleTrajectoryTools.resetObjectsForMultipleTrjaectory import RecordValuesForObjects, ResetObjects, GetObjectsValuesOfAttributes
 
 
-
-def main():
+def runOneConditionSA(condition):
     dirName = os.path.dirname(__file__)
-
+    # wolfActionUpdateInterval = condition['wolfActionUpdateInterval']
+    # sheepActionUpdateInterval = 1
+    maxTrialStep = 360
+    wolfActionUpdateInterval = 3
+    sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [2]
+    manipulatedVariables['sheepNums'] = [condition['sheepNums']]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
+    priorDecayRate = condition['priorDecayRate']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 2
+    trailNumEachCondition = 220
     deviationFor2DAction = 1.0
     rationalityBetaInInference = 1.0
     valuePriorEndTime = -100
@@ -53,7 +57,7 @@ def main():
     # random.shuffle(AllConditions)
 
     experimentValues = co.OrderedDict()
-    experimentValues["name"] = input("Please enter players' name:").capitalize()
+    # experimentValues["name"] = input("Please enter players' name:").capitalize()
 
     mapSize = 1.0
     displaySize = 1.0
@@ -92,9 +96,15 @@ def main():
     picturePath = os.path.abspath(os.path.join(os.path.join(dirName, '..'), 'pictures'))
     resultsDicPath = os.path.join(dirName, '..', 'results')
     
-    # experimentValues["name"] = '0704'
-    writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
-    picklePath = os.path.join(resultsDicPath, experimentValues["name"]) + '.pickle'
+    experimentValues["name"] = '0108'
+    saveNameDict = {'ModelType': 'SA', 'SaveName': experimentValues["name"]}
+    getCsvSavePath = GetSavePath(resultsDicPath,'.csv', saveNameDict)
+    getPickleSavePath = GetSavePath(resultsDicPath,'.pickle', saveNameDict)
+    writerPath = getCsvSavePath(condition)
+    picklePath = getPickleSavePath(condition)
+
+    # writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
+    # picklePath = os.path.join(resultsDicPath, experimentValues["name"]) + '.pickle'
     writer = WriteDataFrameToCSV(writerPath)
     pickleWriter = lambda data: saveToPickle(data,picklePath)
     # introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))
@@ -190,9 +200,9 @@ def main():
         integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
                                         getVelFromAgentState, getPosFromAgentState)
 
+        # For action inference
         actionDimReshaped = 2
         cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
-        # buildGaussian = lambda x: x
         buildGaussian = BuildGaussianFixCov(cov)
         actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoNoisy)
         # actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoisy)
@@ -236,7 +246,7 @@ def main():
         jointHypothesisSpaces = [pd.MultiIndex.from_product(variables, names=['intention']) for variables in
                                  variablesForAllWolves]
         concernedHypothesisVariable = ['intention']
-        priorDecayRate = 1
+        # priorDecayRate = 1
         softPrior = SoftDistribution(priorDecayRate)
         inferIntentionOneStepList = [InferOneStep(jointHypothesisSpace, concernedHypothesisVariable, calJointLikelihood, softPrior) for jointHypothesisSpace in
                                      jointHypothesisSpaces]
@@ -252,7 +262,7 @@ def main():
                             zip(wolvesIntentionPriors, inferIntentionOneStepList)]
 
         # Wolves Generate Action
-        covForPlanning = [0.03 ** 2 for _ in range(actionDimReshaped)]
+        covForPlanning = [0.003 ** 2 for _ in range(actionDimReshaped)]
         buildGaussianForPlanning = BuildGaussianFixCov(covForPlanning)
         composeCentralControlPolicyForPlanning = lambda \
             observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction \
@@ -399,10 +409,9 @@ def main():
     drawBackground = DrawBackgroundWithStep(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
     drawImage = DrawImage(screen)
-    trial = NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
-                                                           drawNewState, recordEaten, modelController,
-                                                           getEntityPos, getEntityVel, allSheepPolicy,
-                                                           transit, getIntentionDistributions, recordActionForUpdateIntention)
+    trial = NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,maxTrialStep,
+                                                           drawNewState, recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy,
+                                                           transit, getIntentionDistributions, recordActionForUpdateIntention,wolfActionUpdateInterval,sheepActionUpdateInterval)
 
     hasRest = False  # True
     experiment = NewtonExperimentWithResetIntention(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, resetIntentions, drawImage)
@@ -413,10 +422,20 @@ def main():
     for i in range(block):
         experiment(AllConditions, restTimes)
         # giveExperimentFeedback(i, score)
-        if i == block - 1:
-            drawImage(finishImage)
-        else:
-            drawImage(restImage)
+        # if i == block - 1:
+        #     drawImage(finishImage)
+        # else:
+        #     drawImage(restImage)
+
+def main():
+    manipulatedVariables = OrderedDict()
+    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    manipulatedVariables['priorDecayRate'] = [1]  #[0.1, 0.4, 0.7, 1.0]
+    productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
+    conditions = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
+    for condition in conditions:
+        # print(condition)
+        runOneConditionSA(condition)
 
 
 if __name__ == "__main__":
