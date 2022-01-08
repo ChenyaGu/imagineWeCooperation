@@ -202,7 +202,7 @@ def runOneConditionSA(condition):
 
         # For action inference
         actionDimReshaped = 2
-        cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
+        cov = [1.0 ** 2 for _ in range(actionDimReshaped)]
         buildGaussian = BuildGaussianFixCov(cov)
         actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoNoisy)
         # actOneStepOneModelWolf = ActOneStep(actByPolicyTrainNoisy)
@@ -262,7 +262,7 @@ def runOneConditionSA(condition):
                             zip(wolvesIntentionPriors, inferIntentionOneStepList)]
 
         # Wolves Generate Action
-        covForPlanning = [0.003 ** 2 for _ in range(actionDimReshaped)]
+        covForPlanning = [0.03 ** 2 for _ in range(actionDimReshaped)]
         buildGaussianForPlanning = BuildGaussianFixCov(covForPlanning)
         composeCentralControlPolicyForPlanning = lambda \
             observe: ComposeCentralControlPolicyByGaussianOnDeterministicAction \
