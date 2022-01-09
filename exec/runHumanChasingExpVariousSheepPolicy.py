@@ -58,7 +58,7 @@ def main():
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
     targetColor = [THECOLORS['orange'], THECOLORS['chocolate1'], THECOLORS['tan1'], THECOLORS['goldenrod2']]  #'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79); 'goldenrod1', (255, 193, 37)
     # targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
-    playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]
+    playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]  #'red3', (205, 0, 0); 'blue3', (0, 0, 205); 'green4', (0, 139, 0)
     blockColors = [THECOLORS['white']] * 2
     textColorTuple = THECOLORS['green']
 

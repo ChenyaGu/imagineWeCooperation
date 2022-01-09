@@ -234,6 +234,7 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
     reshapeHumanAction = ReshapeHumanAction()
     trajectoriesWithIntentionDists = []
 
+    # CORE: Add intention with sas pair
     for trajDict in trajDictList:
         trajectoryDictWithIntension = trajDict.copy()
         if trajDict['condition']['sheepNums'] == numSheep:

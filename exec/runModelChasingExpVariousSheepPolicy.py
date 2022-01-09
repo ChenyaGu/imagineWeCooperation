@@ -27,7 +27,7 @@ def main():
     dirName = os.path.dirname(__file__)
 
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepNums'] = [1,2,4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['self']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
@@ -178,7 +178,7 @@ def main():
                 layerWidth = [128, 128]
 
                 # -----------model--------
-                modelFolderName = 'withoutWall3wolvesForModel'
+                modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
 
                 maxEpisode = 60000

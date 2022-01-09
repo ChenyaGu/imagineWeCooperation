@@ -7,8 +7,8 @@ import seaborn as sns
 import os
 
 def createAllCertainFormatFileList(filePath,fileFormat):
-	filenameList=[os.path.join(filePath,relativeFilename) for relativeFilename in os.listdir(filePath)
-		if os.path.isfile(os.path.join(filePath,relativeFilename))
+	filenameList = [os.path.join(filePath, relativeFilename) for relativeFilename in os.listdir(filePath)
+		if os.path.isfile(os.path.join(filePath, relativeFilename))
 		if os.path.splitext(relativeFilename)[1] in fileFormat]
 	return filenameList
 
@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	fileFolder = os.path.join(dirName, '..', 'results','testFolderIn')
+	fileFolder = os.path.join(dirName, '..', 'results')
 	csvList = []
 	a = os.listdir(fileFolder)
 	for j in a:
@@ -112,7 +112,7 @@ if __name__=="__main__":
 	for index, row in dfSelfAverageScore.iterrows():
 		g.text(index, row['trialScore']+2,round(row['trialScore'],2),color="black",ha="center")
 
-	# ax.set_yticks([0, 10, 20, 30, 40, 50, 60])
+	ax.set_ylim(0, 20)
 
 	# 设置坐标轴下标的字体大小
 	plt.xticks(fontsize=10)

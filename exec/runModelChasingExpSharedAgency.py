@@ -165,7 +165,7 @@ def runOneConditionSA(condition):
             layerWidthForWolf = [64 * (numAgentInWe - 1), 64 * (numAgentInWe - 1)]
             wolfModelsList = [buildWolfModels(layerWidthForWolf, agentID) for agentID in range(numAgentInWe)]
 
-            modelFolderName = 'withoutWall3wolvesForModel'
+            modelFolderName = 'withoutWall3wolves'
             modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
             numBlocks = 0
             maxEpisode = 60000
@@ -344,7 +344,7 @@ def runOneConditionSA(condition):
             layerWidth = [128, 128]
 
             # -----------restore model--------
-            modelFolderName = 'withoutWall3wolvesForModel'
+            modelFolderName = 'withoutWall3wolves'
             # modelFolderName = 'withoutWall2wolves'
 
             maxEpisode = 60000
