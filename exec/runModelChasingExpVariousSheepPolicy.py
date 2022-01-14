@@ -26,6 +26,9 @@ from collections import OrderedDict
 def main():
     dirName = os.path.dirname(__file__)
 
+    maxTrialStep = 360
+    wolfActionUpdateInterval = 3
+    sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1,2,4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
@@ -50,7 +53,7 @@ def main():
 
     screenWidth = int(800)
     screenHeight = int(800)
-    fullScreen = False
+    fullScreen = True
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -238,7 +241,7 @@ def main():
     drawImage = DrawImage(screen)
     trial = NewtonChaseTrialAllCondtionVariouSpeedForModel(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                            drawNewState, recordEaten, modelController,
-                                                           getEntityPos, getEntityVel, allSheepPolicy, transit)
+                                                           getEntityPos, getEntityVel, allSheepPolicy, transit, maxTrialStep,wolfActionUpdateInterval ,sheepActionUpdateInterval,)
 
     hasRest = False  # True
     experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, drawImage)

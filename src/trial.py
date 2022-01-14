@@ -172,8 +172,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
 
 
 class NewtonChaseTrialAllCondtionVariouSpeedForModel():
-    def __init__(self, screen, killzone, targetColors, numOfWolves, numOfBlocks, stopwatchEvent,maxTrialStep,wolfActionUpdateInterval ,sheepActionUpdateInterval, drawNewState,
-                 recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit):
+    def __init__(self, screen, killzone, targetColors, numOfWolves, numOfBlocks, stopwatchEvent, drawNewState,
+                 recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit,maxTrialStep,wolfActionUpdateInterval ,sheepActionUpdateInterval,):
         self.screen = screen
         self.killzone = killzone
         self.targetColors = targetColors
