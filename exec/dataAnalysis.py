@@ -68,7 +68,7 @@ if __name__=="__main__":
 	# plt.show()
 
 	dirName = os.path.dirname(__file__)
-	fileFolder = os.path.join(dirName, '..', 'results')
+	fileFolder = os.path.join(dirName, '..', 'results', 'rawHumanResults')
 	csvList = []
 	a = os.listdir(fileFolder)
 	for j in a:
@@ -110,7 +110,7 @@ if __name__=="__main__":
 	# sns.boxplot(x='sheepConcern', y='trialScore', hue='sheepNum', data=dfTrialData)
 
 	for index, row in dfSelfAverageScore.iterrows():
-		g.text(index, row['trialScore']+2,round(row['trialScore'],2),color="black",ha="center")
+		g.text(index-3, row['trialScore']+2, round(row['trialScore'], 2), color="black", ha="center")
 
 	ax.set_ylim(0, 20)
 

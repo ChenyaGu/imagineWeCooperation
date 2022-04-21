@@ -239,10 +239,11 @@ def calCulateIntenTion(trajDictList,numSheep,fileName):
         trajectoryDictWithIntension = trajDict.copy()
         if trajDict['condition']['sheepNums'] == numSheep:
             trajectory = trajDict['trajectory']
-            for state in trajectory:
-                    action = state[1]
+            for timeStep in trajectory:
+                    state = timeStep[0]
+                    action = timeStep[1]
                     # print(action)
-                    intention = [sampleAction(state[0]) for sampleAction in wolvesSampleActions]
+                    intention = [sampleAction(state) for sampleAction in wolvesSampleActions]
                     reshapedAction =[reshapeHumanAction(sigAction) for sigAction in action]
                     recordActionForUpdateIntention([reshapedAction]) 
                     # intentionDistributions = getIntentionDistributions()

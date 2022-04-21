@@ -391,10 +391,13 @@ def runOneConditionSA(condition):
         checkAllAgents = lambda states: [checkBoudary(agentState) for agentState in states]
         reShapeWolfAction = lambda action, force: action
         reShapeSheepAction = ReshapeActionVariousForce()
-        noiseAction = lambda state: sampleFromContinuousSpace(buildGaussian(tuple(state)))
+
+        covForSheepPlanning = [0.03 ** 2 for _ in range(actionDimReshaped)]
+        buildGaussianForSheepPlanning = BuildGaussianFixCov(covForSheepPlanning)
+        noiseSheepAction = lambda action: sampleFromContinuousSpace(buildGaussianForSheepPlanning(tuple(action)))
         transit = TransitMultiAgentChasingForExpWithNoise(reShapeWolfAction, reShapeSheepAction, applyActionForce,
                                                           applyEnvironForce, integrateState, checkAllAgents,
-                                                          noiseAction)
+                                                          noiseSheepAction)
         # transit = TransitMultiAgentChasingForExpVariousForce(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
 
     # checkTerminationOfTrial = CheckTerminationOfTrial(finishTime)

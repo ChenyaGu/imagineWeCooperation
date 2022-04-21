@@ -27,10 +27,12 @@ from collections import OrderedDict
 def main():
     dirName = os.path.dirname(__file__)
 
+    wolfActionUpdateInterval = 1
+    sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [1, 2, 4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
-    manipulatedVariables['sheepConcern'] = ['self']
+    manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
     trailNumEachCondition = 20
 
@@ -126,7 +128,7 @@ def main():
             applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList, getCollisionForce,
                                                   getPosFromAgentState)
             integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                            getVelFromAgentState, getPosFromAgentState)
+                                            getVelFromAgentState, getPosFromAgentState, damping=0.25, dt=0.05)
 
             actionDimReshaped = 2
             cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
@@ -167,8 +169,9 @@ def main():
                 layerWidth = [128, 128]
 
                 # -----------model--------
-                modelFolderName = 'withoutWall3wolves'
+                # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
+                modelFolderName = '3wolves0.05dt'
 
                 maxEpisode = 60000
                 evaluateEpisode = 60000
@@ -182,8 +185,9 @@ def main():
 
                 modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
                 sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
-                sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
-
+                # sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+                sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(
+                    numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepModelPathsAll = [os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numWolves + numSheepToObserve)]
                 sheepModelPathsSep = [os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileNameSep + str(evaluateEpisode) + 'eps') for i in range(numSheeps)]
 
@@ -215,9 +219,9 @@ def main():
     drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
     trial = NewtonChaseTrialAllCondtionVariouSpeed(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                    drawNewState, checkTerminationOfTrial, recordEaten, humanController,
-                                                   getEntityPos, getEntityVel, allSheepPolicy, transit)
+                                                   getEntityPos, getEntityVel, allSheepPolicy, transit, wolfActionUpdateInterval, sheepActionUpdateInterval)
 
-    hasRest = True
+    hasRest = False
     experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, drawImageBoth)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImageBoth(introductionImage)

@@ -47,8 +47,8 @@ def main():
     textHeight = 24
     objectSize = 30
     targetSize = 20
-    waitTime = 0.08  # for model demo
-    # waitTime = 0.03  # for human demo
+    # waitTime = 0.08  # for model demo
+    waitTime = 0.03  # for human demo
 
     wPtr = visual.Window(size=[768, 768], units='pix', fullscr=False)
     myMouse = event.Mouse(visible=True, win=wPtr)
@@ -62,12 +62,12 @@ def main():
     timerText = showText(wPtr, 50, u'', (0, 0))  # 每个trial间的注视点
 
     dirName = os.path.dirname(__file__)
-    csvName = 'Reduceaction4.csv'
+    csvName = 'DLD4s.csv'
     fileName = os.path.join(dirName, '..', 'results', 'drawTraj', csvName)
     readFun = lambda key: readListCSV(fileName, key)
 
     trialNum = len(readCSV(fileName, 'name'))
-    startTrial = 0
+    startTrial = 9
     targetChoiceList = []
     stepCountList = []
     # -----target position pre-processing-----
@@ -129,26 +129,26 @@ def main():
         # setColorFun(player1Traj)
         # setColorFun(player2Traj)
         # setColorFun(player3Traj)
-        setColorFun(target1Traj)
-        if targetNum[i] == 2:
-            setColorFun(target2Traj)
-        if targetNum[i] == 4:
-            setColorFun(target2Traj)
-            setColorFun(target3Traj)
-            setColorFun(target4Traj)
+        # setColorFun(target1Traj)
+        # if targetNum[i] == 2:
+        #     setColorFun(target2Traj)
+        # if targetNum[i] == 4:
+        #     setColorFun(target2Traj)
+        #     setColorFun(target3Traj)
+        #     setColorFun(target4Traj)
 
         player1Traj.setFillColor('red')
         player2Traj.setFillColor('blue')
         player3Traj.setFillColor('green')
 
         # color all the objects for demo
-        # target1Traj.setFillColor('orange')
-        # if targetNum[i] == 2:
-        #     target2Traj.setFillColor('DarkOrange')
-        # if targetNum[i] == 4:
-        #     target2Traj.setFillColor('DarkOrange')
-        #     target3Traj.setFillColor('SandyBrown')
-        #     target4Traj.setFillColor('goldenrod')
+        target1Traj.setFillColor('orange')
+        if targetNum[i] == 2:
+            target2Traj.setFillColor('DarkOrange')
+        if targetNum[i] == 4:
+            target2Traj.setFillColor('DarkOrange')
+            target3Traj.setFillColor('SandyBrown')
+            target4Traj.setFillColor('goldenrod')
         # 'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79); 'goldenrod1', (255, 193, 37)
 
         player1Traj.autoDraw = True
@@ -246,8 +246,10 @@ def main():
             target2Traj.autoDraw = False
             target3Traj.autoDraw = False
             target4Traj.autoDraw = False
-
-        restTime = 5
+        event.waitKeys()
+        '''
+        # Put fixation points or rests
+        restTime = 2
         restDuration = (trialNum-startTrial)/restTime
         if np.mod((i-startTrial+1), restDuration) != 0:
             dtimer = core.CountdownTimer(1)  # wait for 1s
@@ -262,6 +264,7 @@ def main():
             wPtr.flip()
             event.waitKeys()
             restText.autoDraw = False
+        '''
 
     wPtr.flip()
     event.waitKeys()
