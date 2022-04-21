@@ -34,7 +34,7 @@ def main():
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 20
+    trailNumEachCondition = 5
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -53,7 +53,7 @@ def main():
 
     screenWidth = int(800)
     screenHeight = int(800)
-    fullScreen = True
+    fullScreen = False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -193,14 +193,18 @@ def main():
 
                 actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-                if numSheepToObserve == 1:
-                    [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
-                    sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
-                    sheepPolicyOneCondition = sheepPolicyFun
-                else:
-                    [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                    sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
-                    sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+                # if numSheepToObserve == 1:
+                #     [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
+                #     sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
+                #     sheepPolicyOneCondition = sheepPolicyFun
+                # else:
+                #     [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
+                #     sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
+                #     sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+                [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
+                sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model
+                                                               in sheepModelsListAll]
+                sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
                 return sheepPolicyOneCondition
 
             sheepPolicy = loadPolicyOneCondition(numSheeps, sheepConcern)
