@@ -75,7 +75,7 @@ class UpdateIntention:
         else:
             perceivedAction = self.perceptAction(self.lastAction)
             intentionPosterior = self.inferIntentionOneStep(adjustedIntentionPrior, self.lastState, perceivedAction)
-        print('adjustedIntentionPrior', adjustedIntentionPrior)
+        # print('adjustedIntentionPrior', adjustedIntentionPrior)
         intention = self.chooseIntention(intentionPosterior)
 
         self.lastState = state.copy()
