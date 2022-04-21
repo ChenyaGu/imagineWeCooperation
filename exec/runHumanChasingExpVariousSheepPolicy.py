@@ -19,8 +19,11 @@ from src.trial import NewtonChaseTrialAllCondtionVariouSpeed, isAnyKilled, Check
 from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
-from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpWithNoise, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
-    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce ,ResetMultiAgentNewtonChasingVariousSheep,  BuildGaussianFixCov, sampleFromContinuousSpace
+from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpWithNoise, \
+    GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
+    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce, \
+    ResetMultiAgentNewtonChasingVariousSheep, BuildGaussianFixCov, sampleFromContinuousSpace, ResetStateAndReward, \
+    ContinuousHuntingRewardWolf, IsCollision,IntegratedResetStateAndReward
 from collections import OrderedDict
 
 
@@ -58,9 +61,11 @@ def main():
     screen = initializeScreen()
 
     backgroundColor = THECOLORS['grey']  # [205, 255, 204]
-    targetColor = [THECOLORS['orange'], THECOLORS['chocolate1'], THECOLORS['tan1'], THECOLORS['goldenrod2']]  #'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79); 'goldenrod1', (255, 193, 37)
+    targetColor = [THECOLORS['orange'], THECOLORS['chocolate1'], THECOLORS['tan1'], THECOLORS[
+        'goldenrod2']]  # 'orange', (255, 165, 0); 'chocolate1', (255, 127, 36); 'tan1', (255, 165, 79); 'goldenrod1', (255, 193, 37)
     # targetColor = [THECOLORS['orange']] * 16  # [255, 50, 50]
-    playerColors = [THECOLORS['red3'], THECOLORS['blue3'], THECOLORS['green4']]  #'red3', (205, 0, 0); 'blue3', (0, 0, 205); 'green4', (0, 139, 0)
+    playerColors = [THECOLORS['red3'], THECOLORS['blue3'],
+                    THECOLORS['green4']]  # 'red3', (205, 0, 0); 'blue3', (0, 0, 205); 'green4', (0, 139, 0)
     blockColors = [THECOLORS['white']] * 2
     textColorTuple = THECOLORS['green']
 
@@ -78,12 +83,12 @@ def main():
     pg.key.set_repeat(120, 120)
     picturePath = os.path.abspath(os.path.join(os.path.join(dirName, '..'), 'pictures'))
     resultsDicPath = os.path.join(dirName, '..', 'results')
-    
+
     # experimentValues["name"] = '0704'
     writerPath = os.path.join(resultsDicPath, experimentValues["name"]) + '.csv'
     picklePath = os.path.join(resultsDicPath, experimentValues["name"]) + '.pickle'
     writer = WriteDataFrameToCSV(writerPath)
-    pickleWriter = lambda data: saveToPickle(data,picklePath)
+    pickleWriter = lambda data: saveToPickle(data, picklePath)
     introductionImage = pg.image.load(os.path.join(picturePath, 'introduction-waitall.png'))
     restImage = pg.image.load(os.path.join(picturePath, 'rest-waitall.png'))
     finishImage = pg.image.load(os.path.join(picturePath, 'finish.png'))
@@ -94,7 +99,7 @@ def main():
     experimentValues["numWolves"] = numWolves
     numBlocks = 0
     allSheepPolicy = {}
-
+    allWolfRewardFun = {}
     for numSheeps in manipulatedVariables['sheepNums']:
         for sheepConcern in manipulatedVariables['sheepConcern']:
             numAgents = numWolves + numSheeps
@@ -113,10 +118,16 @@ def main():
             entitiesMovableList = [True] * numAgents + [False] * numBlocks
             massList = [1.0] * numEntities
             reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, numBlocks, mapSize, minDistance)
-            stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize], [-displaySize, displaySize])
+            isCollision = IsCollision(getPosFromAgentState)
+            rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+            allWolfRewardFun.update({(numSheeps, sheepConcern): rewardWolf})
+
+            stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize],
+                                                                              [-displaySize, displaySize])
 
             def checkBoudary(agentState):
-                newState = stayInBoundaryByReflectVelocity(getPosFromAgentState(agentState), getVelFromAgentState(agentState))
+                newState = stayInBoundaryByReflectVelocity(getPosFromAgentState(agentState),
+                                                           getVelFromAgentState(agentState))
                 return newState
 
             checkAllAgents = lambda states: [checkBoudary(agentState) for agentState in states]
@@ -137,6 +148,7 @@ def main():
             transit = TransitMultiAgentChasingForExpWithNoise(reShapeAction, reShapeAction, applyActionForce,
                                                               applyEnvironForce, integrateState, checkAllAgents,
                                                               noiseAction)
+
             # transit = TransitMultiAgentChasingForExpVariousForce(reShapeAction, reShapeAction, applyActionForce, applyEnvironForce, integrateState, checkAllAgents)
 
             def loadPolicyOneCondition(numSheeps, sheepConcern):
@@ -148,15 +160,19 @@ def main():
 
                 wolvesIDForSheepObserve = list(range(numWolves))
                 sheepsIDForSheepObserve = list(range(numWolves, numSheepToObserve + numWolves))
-                blocksIDForSheepObserve = list(range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
-                observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId, blocksIDForSheepObserve,
+                blocksIDForSheepObserve = list(
+                    range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
+                observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId,
+                                                                        blocksIDForSheepObserve,
                                                                         getPosFromAgentState, getVelFromAgentState)
                 observeOneAgentForSheep = ft.partial(observeOneAgentForSheep1, sId=sheepsIDForSheepObserve)
-                observeOneForSheep = lambda state, num: [observeOneAgentForSheep(agentID)(state) for agentID in range(num)]
+                observeOneForSheep = lambda state, num: [observeOneAgentForSheep(agentID)(state) for agentID in
+                                                         range(num)]
                 sheepObserve = ft.partial(observeOneForSheep, num=numWolves + numSheepToObserve)
                 sheepObsList = []
                 for sheepId in sheepsID:
-                    obsFunList = [Observe(agentID, wolvesIDForSheepObserve, [sheepId], blocksIDForSheepObserve, getPosFromAgentState,
+                    obsFunList = [Observe(agentID, wolvesIDForSheepObserve, [sheepId], blocksIDForSheepObserve,
+                                          getPosFromAgentState,
                                           getVelFromAgentState) for agentID in list(range(numWolves)) + [sheepId]]
                     sheepObsLambda = lambda state, obsList: list([obs(state) for obs in obsList])
                     sheepObs = ft.partial(sheepObsLambda, obsList=obsFunList)
@@ -179,27 +195,36 @@ def main():
                 modelSheepSpeed = 1.0
 
                 buildSheepMADDPGModels = BuildMADDPGModels(actionDim, numWolves + numSheepToObserve, obsSheepShape)
-                sheepModelsListAll = [buildSheepMADDPGModels(layerWidth, agentID) for agentID in range(numWolves, numWolves + numSheepToObserve)]
+                sheepModelsListAll = [buildSheepMADDPGModels(layerWidth, agentID) for agentID in
+                                      range(numWolves, numWolves + numSheepToObserve)]
                 sheepModelsListSep = [buildSheepMADDPGModels(layerWidth, agentID) for agentID in
                                       range(numWolves, numWolves + numSheepToObserve) for i in range(numSheeps)]
 
                 modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
-                sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+                sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(
+                    numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 # sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(
                     numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
-                sheepModelPathsAll = [os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numWolves + numSheepToObserve)]
-                sheepModelPathsSep = [os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileNameSep + str(evaluateEpisode) + 'eps') for i in range(numSheeps)]
+                sheepModelPathsAll = [
+                    os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps') for i in
+                    range(numWolves, numWolves + numSheepToObserve)]
+                sheepModelPathsSep = [
+                    os.path.join(modelFolder, 'trainingId' + str(i) + sheepFileNameSep + str(evaluateEpisode) + 'eps')
+                    for i in range(numSheeps)]
 
                 actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
                 if numSheepToObserve == 1:
                     [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
-                    sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
+                    sheepPolicyFun = lambda allAgentsStates: list(
+                        [actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in
+                         enumerate(sheepModelsListSep)])
                     sheepPolicyOneCondition = sheepPolicyFun
                 else:
                     [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                    sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
+                    sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for
+                                                                   model in sheepModelsListAll]
                     sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
                 return sheepPolicyOneCondition
 
@@ -216,13 +241,18 @@ def main():
     drawImage = DrawImage(screen)
     drawImageBoth = DrawImageWithJoysticksCheck(screen, humanController.joystickList)
     drawBackground = DrawBackground(screen, gridSize, leaveEdgeSpace, backgroundColor, textColorTuple, playerColors)
-    drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, displaySize)
+    drawNewState = DrawNewStateWithBlocks(screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius,
+                                          blockRadius, displaySize)
     trial = NewtonChaseTrialAllCondtionVariouSpeed(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                    drawNewState, checkTerminationOfTrial, recordEaten, humanController,
-                                                   getEntityPos, getEntityVel, allSheepPolicy, transit, wolfActionUpdateInterval, sheepActionUpdateInterval)
+                                                   getEntityPos, getEntityVel, allSheepPolicy, transit,allWolfRewardFun,
+                                                   wolfActionUpdateInterval, sheepActionUpdateInterval)
 
     hasRest = False
-    experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, drawImageBoth)
+    resetWithReward = IntegratedResetStateAndReward(reset, allWolfRewardFun)
+
+    experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, resetWithReward,
+                                  drawImageBoth)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     drawImageBoth(introductionImage)
     block = 1

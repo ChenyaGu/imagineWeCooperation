@@ -109,6 +109,39 @@ class PunishForOutOfBound:
         if x < 1.0:
             return (x - 0.9) * 10
         return min(np.exp(2 * x - 2), 10)
+class ContinuousHuntingRewardWolf:
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife = 3 ,collisionReward=10):
+        self.wolvesID = wolvesID
+        self.sheepsID = sheepsID
+        self.entitiesSizeList = entitiesSizeList
+        self.isCollision = isCollision
+        self.collisionReward = collisionReward
+        self.sheepLife = sheepLife
+        # self.sheepsLife = {sheepId:sheepLife for sheepId in sheepsID}
+        self.getCaughtHistory = {sheepId:0 for sheepId in sheepsID}
+    def __call__(self, state, action, nextState):
+        wolfReward = 0
+        for sheepID in self.sheepsID:
+            sheepSize = self.entitiesSizeList[sheepID]
+            sheepNextState = nextState[sheepID]
+            getCaught = 0
+            for wolfID in self.wolvesID:
+                wolfSize = self.entitiesSizeList[wolfID]
+                wolfNextState = nextState[wolfID]
+                if self.isCollision(wolfNextState, sheepNextState, wolfSize, sheepSize):
+                    self.getCaughtHistory[sheepID] += 1
+                    getCaught = 1
+                    break
+            if not getCaught:
+                self.getCaughtHistory[sheepID] = 0
+        for sheepID in self.sheepsID:
+            if self.getCaughtHistory[sheepID] == self.sheepLife:
+                wolfReward += self.collisionReward
+                self.getCaughtHistory[sheepID] = 0
+
+        reward = [wolfReward] * len(self.wolvesID)
+        # print('wolfreward ', wolfReward)
+        return reward
 
 
 class RewardSheep:
@@ -227,6 +260,22 @@ class ResetMultiAgentNewtonChasing:
         state = np.array(agentsState + sheepState)
         return state
 
+class ResetStateAndReward:
+    def __init__(self,resetState,rewardWolf):
+        self.resetState = resetState
+        self.rewardWolf = rewardWolf
+    def __call__(self,numSheep):
+        self.rewardWolf.getCaughtHistory = {sheepId:0 for sheepId in self.rewardWolf.sheepsID}
+        return self.resetState(numSheep)
+
+class IntegratedResetStateAndReward:
+    def __init__(self,resetState,allWolfRewardFun):
+        self.resetState = resetState
+        self.allWolfRewardFun = allWolfRewardFun
+    def __call__(self,numSheep):
+        for key, rewardWolf in self.allWolfRewardFun.items():
+            rewardWolf.getCaughtHistory = {sheepId:0 for sheepId in rewardWolf.sheepsID}
+        return self.resetState(numSheep)
 
 class Observe:
     def __init__(self, agentID, wolvesID, sheepsID, blocksID, getPosFromState, getVelFromAgentState):
