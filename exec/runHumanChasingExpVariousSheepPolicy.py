@@ -215,19 +215,6 @@ def main():
 
                 actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-<<<<<<< HEAD
-                if numSheepToObserve == 1:
-                    [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
-                    sheepPolicyFun = lambda allAgentsStates: list(
-                        [actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in
-                         enumerate(sheepModelsListSep)])
-                    sheepPolicyOneCondition = sheepPolicyFun
-                else:
-                    [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                    sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for
-                                                                   model in sheepModelsListAll]
-                    sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
-=======
                 # if numSheepToObserve == 1:
                 #     [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
                 #     sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
@@ -240,7 +227,7 @@ def main():
                 sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model
                                                                in sheepModelsListAll]
                 sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
->>>>>>> 00610e8d49b7f241cf1629c201220ac65b95ce27
+
                 return sheepPolicyOneCondition
 
             sheepPolicy = loadPolicyOneCondition(numSheeps, sheepConcern)
