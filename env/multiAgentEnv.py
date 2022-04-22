@@ -110,7 +110,7 @@ class PunishForOutOfBound:
             return (x - 0.9) * 10
         return min(np.exp(2 * x - 2), 10)
 class ContinuousHuntingRewardWolf:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife = 3 ,collisionReward=10):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3 ,collisionReward=1):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
