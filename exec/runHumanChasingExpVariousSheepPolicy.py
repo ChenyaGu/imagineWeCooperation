@@ -33,9 +33,9 @@ def main():
     wolfActionUpdateInterval = 1
     sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
+    manipulatedVariables['sheepNums'] = [2, 4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
-    manipulatedVariables['sheepConcern'] = ['self']
+    manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
     trailNumEachCondition = 5
 
@@ -188,6 +188,7 @@ def main():
                 modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
                 # modelFolderName = '3wolves0.05dt'
+                # modelFolderName = '3wolves0.2dt'
 
                 maxEpisode = 60000
                 evaluateEpisode = 60000
@@ -215,18 +216,18 @@ def main():
 
                 actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-                if numSheepToObserve == 1:
-                    [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
-                    sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
-                    sheepPolicyOneCondition = sheepPolicyFun
-                else:
-                    [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                    sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
-                    sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
-                # [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                # sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model
-                #                                                in sheepModelsListAll]
-                # sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+                # if numSheepToObserve == 1:
+                #     [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
+                #     sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
+                #     sheepPolicyOneCondition = sheepPolicyFun
+                # else:
+                #     [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
+                #     sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
+                #     sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+                [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
+                sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model
+                                                               in sheepModelsListAll]
+                sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
 
                 return sheepPolicyOneCondition
 
@@ -247,7 +248,7 @@ def main():
                                           blockRadius, displaySize)
     trial = NewtonChaseTrialAllCondtionVariouSpeed(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                    drawNewState, checkTerminationOfTrial, recordEaten, humanController,
-                                                   getEntityPos, getEntityVel, allSheepPolicy, transit,allWolfRewardFun,
+                                                   getEntityPos, getEntityVel, allSheepPolicy, transit, allWolfRewardFun,
                                                    wolfActionUpdateInterval, sheepActionUpdateInterval)
 
     hasRest = False
