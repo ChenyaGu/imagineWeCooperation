@@ -1,0 +1,2 @@
+model_checkpoint_path: "trainingId0maddpg3wolves1sheep1blocks60000episodes75stepSheepSpeed1.0shared_agent360000eps"
+all_model_checkpoint_paths: "trainingId0maddpg3wolves1sheep1blocks60000episodes75stepSheepSpeed1.0shared_agent360000eps"
