@@ -57,7 +57,7 @@ class NewtonExperiment():
 
     def __call__(self, finishTime, trailCondtions, restTimes):
         trialIndex = 0
-        score = np.array([0]*self.experimentValues["numWolves"])
+        score = 0
         # for trialIndex in range(len(trailCondtions)):
         pickleDataList = []
         for condition in trailCondtions:
@@ -67,10 +67,10 @@ class NewtonExperiment():
             sheepNums = condition['sheepNums']
             initState = self.reset(sheepNums)
             currentStopwatch = 0
-            pickleResult, result, finalState, score, totalScore, currentStopwatch, eatenFlag = self.trial(
+            pickleResult, result, finalState, score, currentStopwatch, eatenFlag = self.trial(
                 initState, score, finishTime, currentStopwatch, trialIndex, condition)
             result["sheepNums"] = sheepNums
-            result["totalScore"] = str(totalScore)
+            result["totalScore"] = str(score)
             pickleResult['trialIndex'] = trialIndex
             response = self.experimentValues.copy()
             response.update(result)

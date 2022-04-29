@@ -20,21 +20,22 @@ from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPoli
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 # from src.sheepPolicy import RandomNewtonMovePolicy, chooseGreedyAction, sampleAction, SoftmaxAction, restoreVariables, ApproximatePolicy
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpWithNoise, GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
-    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce, ResetMultiAgentNewtonChasingVariousSheep, BuildGaussianFixCov, sampleFromContinuousSpace
+    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce, ResetMultiAgentNewtonChasingVariousSheep, \
+    BuildGaussianFixCov, sampleFromContinuousSpace, IsCollision, ContinuousHuntingRewardWolf, IntegratedResetStateAndReward
 from collections import OrderedDict
 
 def main():
     dirName = os.path.dirname(__file__)
 
     maxTrialStep = 360
-    wolfActionUpdateInterval = 3
+    wolfActionUpdateInterval = 1
     sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1, 2, 4]
-    manipulatedVariables['sheepWolfForceRatio'] = [1.2]
+    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepWolfForceRatio'] = [1.0]
     manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
-    trailNumEachCondition = 1
+    trailNumEachCondition = 5
 
     productedValues = it.product(*[[(key, value) for value in values] for key, values in manipulatedVariables.items()])
     parametersAllCondtion = [dict(list(specificValueParameter)) for specificValueParameter in productedValues]
@@ -45,15 +46,15 @@ def main():
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
     mapSize = 1.0
-    displaySize = 1.0
+    displaySize = 1.5
     minDistance = mapSize * 1 / 3
-    wolfSize = 0.075
-    sheepSize = 0.05
-    blockSize = 0.2
+    wolfSize = 0.065
+    sheepSize = 0.065
+    blockSize = 0.13
 
     screenWidth = int(800)
     screenHeight = int(800)
-    fullScreen = True
+    fullScreen = False
     initializeScreen = InitializeScreen(screenWidth, screenHeight, fullScreen)
     screen = initializeScreen()
 
@@ -93,9 +94,10 @@ def main():
     # --------environment setting-----------
     numWolves = 3
     experimentValues["numWolves"] = numWolves
-    numBlocks = 0
+    numBlocks = 2
     allSheepPolicy = {}
     allWolfPolicy = {}
+    allWolfRewardFun = {}
     for numSheeps in manipulatedVariables['sheepNums']:
         for sheepConcern in manipulatedVariables['sheepConcern']:
             numAgents = numWolves + numSheeps
@@ -106,14 +108,18 @@ def main():
 
             entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
-            wolfMaxSpeed = 1
-            sheepMaxSpeed = 1.3
+            wolfMaxSpeed = 1.0
+            sheepMaxSpeed = 1.0
             blockMaxSpeed = None
 
             entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
             entitiesMovableList = [True] * numAgents + [False] * numBlocks
             massList = [1.0] * numEntities
             reset = ResetMultiAgentNewtonChasingVariousSheep(numWolves, numBlocks, mapSize, minDistance)
+            isCollision = IsCollision(getPosFromAgentState)
+            rewardWolf = ContinuousHuntingRewardWolf(wolvesID, sheepsID, entitiesSizeList, isCollision)
+            allWolfRewardFun.update({(numSheeps, sheepConcern): rewardWolf})
+
             stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize], [-displaySize, displaySize])
 
             def checkBoudary(agentState):
@@ -129,7 +135,7 @@ def main():
             applyEnvironForce = ApplyEnvironForce(numEntities, entitiesMovableList, entitiesSizeList, getCollisionForce,
                                                   getPosFromAgentState)
             integrateState = IntegrateState(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                            getVelFromAgentState, getPosFromAgentState, damping=0.25, dt=0.1)
+                                            getVelFromAgentState, getPosFromAgentState, damping=0.25, dt=0.2)
 
             actionDimReshaped = 2
             cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
@@ -157,7 +163,7 @@ def main():
                 wolvesIDForSheepObserve = list(range(numWolves))
                 sheepsIDForSheepObserve = list(range(numWolves, numSheepToObserve + numWolves))
                 blocksIDForSheepObserve = list(
-                    range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
+                    range(numSheeps + numWolves, numSheeps + numWolves + numBlocks))
                 observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId,
                                                                         blocksIDForSheepObserve,
                                                                         getPosFromAgentState, getVelFromAgentState)
@@ -183,7 +189,7 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = '3wolves0.05dt'
+                modelFolderName = 'shared2block'
 
                 maxEpisode = 60000
                 evaluateEpisode = 60000
@@ -215,7 +221,7 @@ def main():
                 wolfPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in wolfModelsList]
                 wolfPolicyOneCondition = ft.partial(wolfPolicyFun, obs=observe)
 
-                if numSheepToObserve == 1:
+                if sheepConcern == 'self':
                     [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
                     sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
                     sheepPolicyOneCondition = sheepPolicyFun
@@ -223,6 +229,7 @@ def main():
                     [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
                     sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
                     sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
+
                 return sheepPolicyOneCondition, wolfPolicyOneCondition
 
             sheepPolicy, wolfPolicy = loadPolicyOneCondition(numSheeps, sheepConcern)
@@ -243,10 +250,12 @@ def main():
     drawImage = DrawImage(screen)
     trial = NewtonChaseTrialAllCondtionVariouSpeedForModel(screen, killzone, targetColor, numWolves, numBlocks, stopwatchEvent,
                                                            drawNewState, recordEaten, modelController,
-                                                           getEntityPos, getEntityVel, allSheepPolicy, transit, maxTrialStep, wolfActionUpdateInterval, sheepActionUpdateInterval)
+                                                           getEntityPos, getEntityVel, allSheepPolicy, transit, maxTrialStep,
+                                                           allWolfRewardFun, wolfActionUpdateInterval, sheepActionUpdateInterval)
 
     hasRest = False  # True
-    experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, reset, drawImage)
+    resetWithReward = IntegratedResetStateAndReward(reset, allWolfRewardFun)
+    experiment = NewtonExperiment(restImage, hasRest, trial, writer, pickleWriter, experimentValues, resetWithReward, drawImage)
     # giveExperimentFeedback = GiveExperimentFeedback(screen, textColorTuple, screenWidth, screenHeight)
     # drawImageBoth(introductionImage)
     block = 1

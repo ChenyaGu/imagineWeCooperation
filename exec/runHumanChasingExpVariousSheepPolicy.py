@@ -20,10 +20,9 @@ from src.experiment import NewtonExperiment
 from src.maddpg.trainer.myMADDPG import ActOneStep, BuildMADDPGModels, actByPolicyTrainNoisy
 from src.functionTools.loadSaveModel import saveToPickle, restoreVariables, GetSavePath
 from env.multiAgentEnv import StayInBoundaryByReflectVelocity, TransitMultiAgentChasingForExpWithNoise, \
-    GetCollisionForce, ApplyActionForce, ApplyEnvironForce, \
-    IntegrateState, getPosFromAgentState, getVelFromAgentState, Observe, ReshapeActionVariousForce, \
-    ResetMultiAgentNewtonChasingVariousSheep, BuildGaussianFixCov, sampleFromContinuousSpace, ResetStateAndReward, \
-    ContinuousHuntingRewardWolf, IsCollision,IntegratedResetStateAndReward
+    GetCollisionForce, ApplyActionForce, ApplyEnvironForce, IntegrateState, getPosFromAgentState, getVelFromAgentState, \
+    Observe, ReshapeActionVariousForce, ResetMultiAgentNewtonChasingVariousSheep, BuildGaussianFixCov, sampleFromContinuousSpace,\
+    ResetStateAndReward, ContinuousHuntingRewardWolf, IsCollision, IntegratedResetStateAndReward
 from collections import OrderedDict
 
 
@@ -35,7 +34,7 @@ def main():
     manipulatedVariables = OrderedDict()
     manipulatedVariables['sheepNums'] = [2, 4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.2]
-    manipulatedVariables['sheepConcern'] = ['self']
+    manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
     trailNumEachCondition = 5
 
@@ -50,9 +49,9 @@ def main():
     mapSize = 1.0
     displaySize = 1.0
     minDistance = mapSize * 1 / 3
-    wolfSize = 0.075
-    sheepSize = 0.05
-    blockSize = 0.2
+    wolfSize = 0.065
+    sheepSize = 0.065
+    blockSize = 0.13
 
     screenWidth = int(800)
     screenHeight = int(800)
@@ -97,7 +96,7 @@ def main():
     # --------environment setting-----------
     numWolves = 3
     experimentValues["numWolves"] = numWolves
-    numBlocks = 0
+    numBlocks = 2
     allSheepPolicy = {}
     allWolfRewardFun = {}
     for numSheeps in manipulatedVariables['sheepNums']:
@@ -110,8 +109,8 @@ def main():
 
             entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
-            wolfMaxSpeed = 1
-            sheepMaxSpeed = 1.3
+            wolfMaxSpeed = 1.0
+            sheepMaxSpeed = 1.0
             blockMaxSpeed = None
 
             entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
@@ -161,7 +160,7 @@ def main():
                 wolvesIDForSheepObserve = list(range(numWolves))
                 sheepsIDForSheepObserve = list(range(numWolves, numSheepToObserve + numWolves))
                 blocksIDForSheepObserve = list(
-                    range(numSheepToObserve + numWolves, numSheepToObserve + numWolves + numBlocks))
+                    range(numSheeps + numWolves, numSheeps + numWolves + numBlocks))
                 observeOneAgentForSheep1 = lambda agentID, sId: Observe(agentID, wolvesIDForSheepObserve, sId,
                                                                         blocksIDForSheepObserve,
                                                                         getPosFromAgentState, getVelFromAgentState)
@@ -185,13 +184,9 @@ def main():
                 layerWidth = [128, 128]
 
                 # -----------model--------
-                modelFolderName = 'withoutWall3wolves'
+                # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                # modelFolderName = '0.2dt0block'
-                # modelFolderName = '0.4dt0block'
-                # modelFolderName = '0.2dt1block'
-                # modelFolderName = '0.4dt1block'
-                # modelFolderName = '0.2dtOriginalReward'
+                modelFolderName = 'shared0block'
 
                 maxEpisode = 60000
                 evaluateEpisode = 60000
@@ -219,7 +214,7 @@ def main():
 
                 actOneStepOneModel = ActOneStep(actByPolicyTrainNoisy)
 
-                if numSheepToObserve == 1:
+                if sheepConcern == 'self':
                     [restoreVariables(model, path) for model, path in zip(sheepModelsListSep, sheepModelPathsSep)]
                     sheepPolicyFun = lambda allAgentsStates: list([actOneStepOneModel(model, sheepObsList[i](allAgentsStates)) for i, model in enumerate(sheepModelsListSep)])
                     sheepPolicyOneCondition = sheepPolicyFun
@@ -227,11 +222,6 @@ def main():
                     [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
                     sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model in sheepModelsListAll]
                     sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
-                # [restoreVariables(model, path) for model, path in zip(sheepModelsListAll, sheepModelPathsAll)]
-                # sheepPolicyFun = lambda allAgentsStates, obs: [actOneStepOneModel(model, obs(allAgentsStates)) for model
-                #                                                in sheepModelsListAll]
-                # sheepPolicyOneCondition = ft.partial(sheepPolicyFun, obs=sheepObserve)
-
                 return sheepPolicyOneCondition
 
             sheepPolicy = loadPolicyOneCondition(numSheeps, sheepConcern)

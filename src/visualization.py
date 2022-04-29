@@ -34,7 +34,7 @@ class InitializeScreen:
 
 def drawText(screen, text, textColorTuple, textPositionTuple, textSize=50):
     font = pg.font.Font(None, textSize)
-    textObj = font.render(text, 1, textColorTuple)
+    textObj = font.render(text, True, textColorTuple)
     screen.blit(textObj, textPositionTuple)
     return
 
@@ -102,13 +102,13 @@ class DrawBackground():
                  (self.widthLineStepSpace * 5, self.widthLineStepSpace), 60)
         # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
         # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
-        drawText(self.screen, 'TotalScore: ' + str(np.sum(currentScore)), self.textColorTuple,
+        drawText(self.screen, 'TotalScore: ' + str(currentScore), self.textColorTuple,
                  (self.widthLineStepSpace * 25, self.widthLineStepSpace), 60)
         return
 
 
 class DrawNewStateWithBlocks():
-    def __init__(self, screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor= [THECOLORS['yellow']]):
+    def __init__(self, screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius, mapSize, catchColor=[THECOLORS['yellow']]):
         self.screen = screen
         self.drawBackground = drawBackground
         self.playerColors = playerColors
@@ -125,14 +125,14 @@ class DrawNewStateWithBlocks():
         self.drawBackground(currentTime, currentScore)
         mappingFun = lambda x: (x + self.mapSize)*(self.drawBackground.gridSize/(2*self.mapSize))  # mapping mapSize[-1,1] to gridSize[0,40]
         for i, targetPosition in enumerate(targetPositions):
+            posX = np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace)
+            posY = np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)
             if currentEatenFlag[i]:
                 targetColor = self.catchColor[0]
             else:
                 targetColor = targetColors[i]
-            pg.draw.circle(self.screen, targetColor,
-                           [np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace),
-                            np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)],
-                           self.targetRadius)
+            pg.draw.circle(self.screen, targetColor, [posX, posY], self.targetRadius)
+            drawText(self.screen, str(i+1), THECOLORS['black'], [posX - self.targetRadius / 4, posY - self.targetRadius / 4], self.targetRadius)
 
         for blockPosition, blockColor in zip(blockPositions[:], self.blockColors[:]):
             pg.draw.circle(self.screen, blockColor,

@@ -174,7 +174,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForSharedAgency():
 class NewtonChaseTrialAllCondtionVariouSpeedForModel():
     def __init__(self, screen, killzone, targetColors, numOfWolves, numOfBlocks, stopwatchEvent, drawNewState,
                  recordEaten, modelController, getEntityPos, getEntityVel, allSheepPolicy, transit, maxTrialStep,
-                 wolfActionUpdateInterval, sheepActionUpdateInterval):
+                 allWolfRewardFun, wolfActionUpdateInterval, sheepActionUpdateInterval):
         self.screen = screen
         self.killzone = killzone
         self.targetColors = targetColors
@@ -190,6 +190,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         self.allSheepPolicy = allSheepPolicy
         self.transit = transit
         self.maxTrialStep = maxTrialStep
+        self.allWolfRewardFun = allWolfRewardFun
         self.wolfActionUpdateInterval = wolfActionUpdateInterval
         self.sheepActionUpdateInterval = sheepActionUpdateInterval
     def __call__(self, initState, score, finishTime, currentStopwatch, trialIndex, condition):
@@ -229,11 +230,14 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         #              (self.screen.get_width() * 8 / 3, self.screen.get_height() / 2), 100)
         #     pg.display.update()
         #     readyTime -= self.stopwatchUnit
-
         initialTime = time.get_ticks()
         eatenFlag = [0] * len(initTargetPositions)
-        hunterFlag = score
+        hunterFlag = [0] * len(initPlayerPositions)
         trialStep = -1
+        rewardList = []
+        wolfPolicy = self.modelController[sheepNums, sheepConcern]
+        sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
+        wolfReward = self.allWolfRewardFun[sheepNums, sheepConcern]
         while pause:
             trialStep += 1
             pg.time.delay(32)
@@ -241,17 +245,20 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
             remainningStep = max(0, self.maxTrialStep - trialStep)
             targetPositions = getTargetPos(state)
             playerPositions = getPlayerPos(state)
-            wolfPolicy = self.modelController[sheepNums, sheepConcern]
             if np.mod(trialStep, self.wolfActionUpdateInterval) == 0:
                 humanAction = wolfPolicy(state)
             else:
                 humanAction = humanAction
-            sheepPolicy = self.allSheepPolicy[sheepNums, sheepConcern]
             if np.mod(trialStep, self.sheepActionUpdateInterval) == 0:
                 sheepAction = sheepPolicy(state)
             else:
                 sheepAction = sheepAction
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
+            action = humanAction + sheepAction
+            reward = wolfReward(state, action, nextState)[0]
+            score += reward
+            rewardList.append(reward)
+
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pause = True
@@ -259,10 +266,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
                 elif event.type == self.stopwatchEvent:
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
             currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
-            score = hunterFlag
             self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningStep, score, currentEatenFlag)
             pg.display.update()
-            action = humanAction + sheepAction
             trajectory.append((state, action, nextState))
             state = nextState
             stateList.append(nextState)
@@ -275,7 +280,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         results["trialTime"] = wholeResponseTime
         results["hunterFlag"] = str(hunterFlag)
         results["sheepEatenFlag"] = str(eatenFlag)
-        results["trialScore"] = sum(eatenFlag)
+        results["trialScore"] = sum(rewardList)
         wolf1Traj = []
         wolf1Vel = []
         wolf2Traj = []
@@ -318,9 +323,8 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
 
-        totalScore = np.sum(score)
-        print(totalScore)
-        return pickleResults, results, nextState, score, totalScore, currentStopwatch, eatenFlag
+        print('totalScore:', score)
+        return pickleResults, results, nextState, score, currentStopwatch, eatenFlag
 
 
 class NewtonChaseTrialAllCondtionVariouSpeed():
@@ -405,9 +409,10 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
                 sheepAction = sheepAction
             nextState = self.transit(state, humanAction, sheepAction, wolfForce, sheepForce)
             action = humanAction + sheepAction
-
             reward = wolfReward(state, action, nextState)[0]
+            score += reward
             rewardList.append(reward)
+
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pause = True
@@ -415,8 +420,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
                 elif event.type == self.stopwatchEvent:
                     currentStopwatch = currentStopwatch + self.stopwatchUnit
             currentEatenFlag, eatenFlag, hunterFlag = self.recordEaten(targetPositions, playerPositions, killZone, eatenFlag, hunterFlag)
-            score = rewardList
-            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, rewardList, currentEatenFlag)
+            self.drawNewState(targetColors, targetPositions, playerPositions, initBlockPositions, remainningTime, score, currentEatenFlag)
             pg.display.update()
             trajectory.append((state, action, nextState))
             state = nextState
@@ -428,7 +432,7 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         results["trialTime"] = wholeResponseTime
         results["hunterFlag"] = str(hunterFlag)
         results["sheepEatenFlag"] = str(eatenFlag)
-        results["trialScore"] = sum(eatenFlag)
+        results["trialScore"] = sum(rewardList)
         wolf1Traj = []
         wolf1Vel = []
         wolf2Traj = []
@@ -471,9 +475,8 @@ class NewtonChaseTrialAllCondtionVariouSpeed():
         results["player2 vel"] = str(wolf2Vel)
         results["sheeps vel"] = str(sheepVel)
 
-        totalScore = np.sum(rewardList)
-        print('totalScore:', totalScore)
-        return pickleResults, results, nextState, score, totalScore, currentStopwatch, eatenFlag
+        print('totalScore:', score)
+        return pickleResults, results, nextState, score, currentStopwatch, eatenFlag
 
 
 class NewtonChaseTrialAllCondtion():
