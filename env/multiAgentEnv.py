@@ -109,8 +109,10 @@ class PunishForOutOfBound:
         if x < 1.0:
             return (x - 0.9) * 10
         return min(np.exp(2 * x - 2), 10)
+
+
 class ContinuousHuntingRewardWolf:
-    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3 ,collisionReward=1):
+    def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, sheepLife=3, collisionReward=1):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -306,8 +308,8 @@ class Observe:
             velInfo.append(sheepVel)
 
         agentVel = self.getEntityVel(state, self.agentID)
-        # print(self.agentID,self.sheepsID,':',state)
-        # print(self.agentID,self.sheepsID,':',np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo))
+        # print(self.agentID,self.sheepsID,'state:', state)
+        # print(self.agentID,self.sheepsID,'agentVel:' ,agentVel, 'agentPos:' ,agentPos, 'blocksInfo:' ,blocksInfo, 'posInfo:' ,posInfo, 'velInfo:' ,velInfo)
         return np.concatenate([agentVel] + [agentPos] + blocksInfo + posInfo + velInfo)
 
 
