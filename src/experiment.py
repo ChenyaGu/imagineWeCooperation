@@ -67,8 +67,8 @@ class NewtonExperiment():
             sheepNums = condition['sheepNums']
             initState = self.reset(sheepNums)
             currentStopwatch = 0
-            pickleResult, result, finalState, score, currentStopwatch, eatenFlag = self.trial(
-                initState, score, finishTime, currentStopwatch, trialIndex, condition)
+            pickleResult, result, finalState, score, currentStopwatch, eatenFlag = self.trial\
+                (initState, score, finishTime, currentStopwatch, trialIndex, condition)
             result["sheepNums"] = sheepNums
             result["totalScore"] = str(score)
             pickleResult['trialIndex'] = trialIndex

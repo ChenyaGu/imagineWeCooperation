@@ -211,10 +211,10 @@ class CalSheepCaughtHistory:
         self.isCollision = isCollision
         self.sheepLife = sheepLife
     def __call__(self, state, nextState):
-        sheepsID = range(len(self.wolvesID), len(state)-self.numBlock)
-        self.getCaughtHistory = {sheepId: getCaughtHistoryFromAgentState(state[sheepId]) for sheepId in sheepsID}
+        self.sheepsID = range(len(self.wolvesID), len(state)-self.numBlock)
+        self.getCaughtHistory = {sheepId: getCaughtHistoryFromAgentState(state[sheepId]) for sheepId in self.sheepsID}
 
-        for sheepID in sheepsID:
+        for sheepID in self.sheepsID:
             sheepSize = self.entitiesSizeList[sheepID]
             sheepNextState = nextState[sheepID]
             getCaught = 0
@@ -361,8 +361,9 @@ class ResetStateWithCaughtHistory:
     def __init__(self, resetState, calSheepCaughtHistory):
         self.resetState = resetState
         self.calSheepCaughtHistory = calSheepCaughtHistory
-    def __call__(self):
-        self.calSheepCaughtHistory.getCaughtHistory = {sheepId: 0 for sheepId in self.calSheepCaughtHistory.sheepsID}
+    def __call__(self, numSheep):
+        sheepsID = range(numSheep)
+        self.calSheepCaughtHistory.getCaughtHistory = {sheepId: 0 for sheepId in sheepsID}
         return self.resetState()
 
 
@@ -587,7 +588,7 @@ class IntegrateStateWithCaughtHistory:
     def __call__(self, pForce, state):
         getNextState = lambda entityPos, entityVel: list(entityPos) + list(entityVel)
         nextState = []
-        sheepsID = self.calSheepCaughtHistory.sheepsID
+        sheepsID = range(len(self.calSheepCaughtHistory.wolvesID), len(state)-self.calSheepCaughtHistory.numBlock)
         for entityID in range(self.numEntities):
             entityMovable = self.entitiesMovableList[entityID]
             entityVel = self.getEntityVel(state, entityID)

@@ -109,7 +109,7 @@ class DrawBackground():
 
 class DrawNewStateWithBlocksAndFeedback():
     def __init__(self, screen, drawBackground, playerColors, blockColors, targetRadius, playerRadius, blockRadius,
-                 mapSize, sheepLife, catchColor=[THECOLORS['yellow'], THECOLORS['red'], THECOLORS['white']]):
+                 mapSize, sheepLife, catchColor=[THECOLORS['yellow'], THECOLORS['white'], THECOLORS['red']]):
         self.screen = screen
         self.drawBackground = drawBackground
         self.playerColors = playerColors
@@ -129,13 +129,12 @@ class DrawNewStateWithBlocksAndFeedback():
         for i, targetPosition in enumerate(targetPositions):
             posX = np.int((mappingFun(targetPosition[0]) + self.leaveEdgeSpace) * self.widthLineStepSpace)
             posY = np.int((mappingFun(targetPosition[1]) + self.leaveEdgeSpace) * self.heightLineStepSpace)
-            if currentEatenFlag[i]:
+            targetColor = targetColors[i]
+            if currentEatenFlag[i] and caughtHistoryList[i] == self.sheepLife:
+                # targetColor = self.catchColor[1]
+                pg.draw.circle(self.screen, self.catchColor[2], [posX, posY], self.targetRadius * 1.2, width=10)
+            elif currentEatenFlag[i]:
                 targetColor = self.catchColor[0]
-            elif caughtHistoryList[i] == self.sheepLife:
-                targetColor = self.catchColor[1]
-                pg.draw.circle(self.screen, self.catchColor[3], [posX, posY], self.targetRadius*1.2,width = 2)
-            else:
-                targetColor = targetColors[i]
             pg.draw.circle(self.screen, targetColor, [posX, posY], self.targetRadius)
             drawText(self.screen, str(i+1), THECOLORS['black'], [posX - self.targetRadius / 4, posY - self.targetRadius / 4], self.targetRadius)
 
