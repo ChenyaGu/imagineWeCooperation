@@ -191,8 +191,7 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = 'shared0block'
-                modelFolderName = 'individ2block'
+                modelFolderName = 'newRewardIndividualAllSheep2block12Wepisode'
 
                 maxEpisode = 60000
                 evaluateEpisode = 60000
