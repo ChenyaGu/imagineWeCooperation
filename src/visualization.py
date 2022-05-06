@@ -75,7 +75,7 @@ class DrawBackgroundWithStep():
                  (self.widthLineStepSpace * 5, self.widthLineStepSpace), 60)
         # drawText(self.screen, '1P: ' + str(currentScore[0]), self.playerColors[0], (self.widthLineStepSpace * 35  , self.leaveEdgeSpace * 3))
         # drawText(self.screen, '2P: ' + str(currentScore[1]), self.playerColors[1], (self.widthLineStepSpace * 50, self.leaveEdgeSpace * 3))
-        drawText(self.screen, 'TotalScore: ' + str(np.sum(currentScore)), self.textColorTuple,
+        drawText(self.screen, 'TotalScore: ' + str(round(float(np.sum(currentScore)), 2)), self.textColorTuple,
                  (self.widthLineStepSpace * 25, self.widthLineStepSpace), 60)
         return
 

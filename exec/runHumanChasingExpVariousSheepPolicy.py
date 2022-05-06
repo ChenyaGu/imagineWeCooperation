@@ -124,12 +124,10 @@ def main():
             rewardWolf = RewardWolfWithBiteAndKill(wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife)
             allWolfRewardFun.update({(numSheeps, sheepConcern): rewardWolf})
 
-            stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize],
-                                                                              [-displaySize, displaySize])
+            stayInBoundaryByReflectVelocity = StayInBoundaryByReflectVelocity([-displaySize, displaySize], [-displaySize, displaySize])
 
             def checkBoudary(agentState):
-                newState = stayInBoundaryByReflectVelocity(getPosFromAgentState(agentState),
-                                                           getVelFromAgentState(agentState))
+                newState = stayInBoundaryByReflectVelocity(getPosFromAgentState(agentState), getVelFromAgentState(agentState))
                 return newState
 
             def checkBoudaryWithCaughtHistory(agentState):
