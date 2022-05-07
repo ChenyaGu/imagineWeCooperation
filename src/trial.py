@@ -243,7 +243,7 @@ class NewtonChaseTrialAllCondtionVariouSpeedForModel():
         transit = self.allTransitFun[sheepNums, sheepConcern]
         while pause:
             trialStep += 1
-            pg.time.delay(140)
+            pg.time.delay(32)
             # remainningTime = max(0, finishTime - currentStopwatch)
             remainningStep = max(0, self.maxTrialStep - trialStep)
             targetPositions = getTargetPos(state)

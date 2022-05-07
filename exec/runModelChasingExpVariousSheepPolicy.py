@@ -32,7 +32,7 @@ def main():
     wolfActionUpdateInterval = 1
     sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepNums'] = [1]
     manipulatedVariables['sheepWolfForceRatio'] = [1.0]
     manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
@@ -148,7 +148,7 @@ def main():
                                                   getPosFromAgentState)
             calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, numBlocks, entitiesSizeList, isCollision, sheepLife)
             integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.2)
+                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.05)
 
             actionDimReshaped = 2
             cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
@@ -205,10 +205,10 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = 'newRewardIndividualAllSheep2block12Wepisode'
+                modelFolderName = 'newRewardIndividalAllSheep8Wepisode0.05dt'
 
-                maxEpisode = 120000
-                evaluateEpisode = 120000
+                maxEpisode = 80000
+                evaluateEpisode = 80000
                 maxTimeStep = 75
                 modelSheepSpeed = 1.0
 
