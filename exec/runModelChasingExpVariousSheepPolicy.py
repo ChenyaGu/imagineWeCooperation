@@ -32,7 +32,7 @@ def main():
     wolfActionUpdateInterval = 1
     sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1]
+    manipulatedVariables['sheepNums'] = [4]
     manipulatedVariables['sheepWolfForceRatio'] = [1.0]
     manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
@@ -46,13 +46,12 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 1.3
-    displaySize = 1.5
+    mapSize = 1.0
+    displaySize = 1.1
     minDistance = mapSize * 1 / 3
     wolfSize = 0.065
     sheepSize = 0.065
-    # blockSize = 0.39
-    blockSize = 0.52
+    blockSize = 0.13
 
     screenWidth = int(800)
     screenHeight = int(800)

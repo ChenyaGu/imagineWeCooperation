@@ -242,12 +242,13 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
 
     def __call__(self, numSheeps):
         sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize, self.mapSize, self.positionDimension))]
+        sampleBlockPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize+0.26, self.mapSize-0.26, self.positionDimension))]
 
         initWolfRandomPos = [sampleOneAgentPosition() for wolfID in range(self.numWolves)]
         initWolfZeroVel = lambda: np.zeros(self.positionDimension)
         initSheepRandomPos = [sampleOneAgentPosition() for sheepID in range(numSheeps)]
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
-        initBlockRandomPos = [sampleOneAgentPosition() for blockID in range(self.numBlocks)]
+        initBlockRandomPos = [sampleBlockPosition() for blockID in range(self.numBlocks)]
         initBlockZeroVel = lambda: np.zeros(self.positionDimension)
 
         for i, sheepPos in enumerate(initSheepRandomPos):
@@ -256,6 +257,14 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
                 sheepPos = sampleOneAgentPosition()
             initSheepRandomPos[i] = sheepPos
 
+        # Obstacles overlap detection
+        # The distance between obstacles should at least accommodate 2 agents (wolves/sheep)
+        # while self.numBlocks:
+        #     = [list(getBlockRandomPos()) for blockID in range(self.numBlocks)]
+        #     posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
+        #     dist = np.sqrt(np.sum(np.square(posDiff)))
+        #     if dist > (0.39 * 2 + 0.065 * 2):
+        #         break
         agentsState = [state + vel for state, vel in
                        zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
         sheepState = [state + vel for state, vel in
