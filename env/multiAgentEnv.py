@@ -243,7 +243,7 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
     def __call__(self, numSheeps):
         sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize, self.mapSize, self.positionDimension))]
 
-        initWolfRandomPos = [sampleOneAgentPosition() for ID in range(self.numWolves)]
+        initWolfRandomPos = [sampleOneAgentPosition() for wolfID in range(self.numWolves)]
         initWolfZeroVel = lambda: np.zeros(self.positionDimension)
         initSheepRandomPos = [sampleOneAgentPosition() for sheepID in range(numSheeps)]
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
@@ -255,6 +255,7 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
                                    initWolfRandomPos]) < self.minDistance):
                 sheepPos = sampleOneAgentPosition()
             initSheepRandomPos[i] = sheepPos
+
         agentsState = [state + vel for state, vel in
                        zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
         sheepState = [state + vel for state, vel in
