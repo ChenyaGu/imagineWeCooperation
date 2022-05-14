@@ -32,7 +32,7 @@ def main():
     wolfActionUpdateInterval = 1
     sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [4]
+    manipulatedVariables['sheepNums'] = [1]
     manipulatedVariables['sheepWolfForceRatio'] = [1.0]
     manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
@@ -46,12 +46,12 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 1.0
-    displaySize = 1.1
+    mapSize = 1.3
+    displaySize = 1.3
     minDistance = mapSize * 1 / 3
     wolfSize = 0.065
     sheepSize = 0.065
-    blockSize = 0.13
+    blockSize = 0.39
 
     screenWidth = int(800)
     screenHeight = int(800)
@@ -205,7 +205,9 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = 'newRewardIndividalAllSheep8Wepisode0.05dt'
+                modelFolderName = '8Wepisode0.05dtLargerMapsizeAndBlocksize'
+                # modelFolderName = '8Wepisode0.05dtLargerMapsizeAndBlocksize1.2sheepForce'
+                # modelFolderName = '8Wepisode0.05dtLargerMapsizeAndBlocksize1.2sheepMaxSpeed'
 
                 maxEpisode = 80000
                 evaluateEpisode = 80000
