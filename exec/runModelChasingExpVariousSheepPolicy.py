@@ -46,12 +46,12 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 1.3
+    mapSize = 1.1
     displaySize = 1.3
     minDistance = mapSize * 1 / 3
     wolfSize = 0.065
     sheepSize = 0.065
-    blockSize = 0.39
+    blockSize = 0.325
 
     screenWidth = int(800)
     screenHeight = int(800)
@@ -112,7 +112,7 @@ def main():
             entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
             wolfMaxSpeed = 1.0
-            sheepMaxSpeed = 1.0
+            sheepMaxSpeed = 1.2
             blockMaxSpeed = None
 
             entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
@@ -148,7 +148,7 @@ def main():
                                                   getPosFromAgentState)
             calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, numBlocks, entitiesSizeList, isCollision, sheepLife)
             integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.05)
+                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.1)
 
             actionDimReshaped = 2
             cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
@@ -205,12 +205,10 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = '8Wepisode0.05dtLargerMapsizeAndBlocksize'
-                # modelFolderName = '8Wepisode0.05dtLargerMapsizeAndBlocksize1.2sheepForce'
-                # modelFolderName = '8Wepisode0.05dtLargerMapsizeAndBlocksize1.2sheepMaxSpeed'
+                modelFolderName = '12Wepisode0.1dt1.1Mapsize0.325BlockSize1ForceRatio1.2SheepMaxSpeed'
 
-                maxEpisode = 80000
-                evaluateEpisode = 80000
+                maxEpisode = 120000
+                evaluateEpisode = 120000
                 maxTimeStep = 75
                 modelSheepSpeed = 1.0
 

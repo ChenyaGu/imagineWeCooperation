@@ -242,7 +242,7 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
 
     def __call__(self, numSheeps):
         sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize, self.mapSize, self.positionDimension))]
-        sampleBlockPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize+0.39+0.26, self.mapSize-0.39-0.26, self.positionDimension))]
+        sampleBlockPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize+0.325+0.065*2, self.mapSize-0.325-0.065*2, self.positionDimension))]
 
         initWolfRandomPos = [sampleOneAgentPosition() for wolfID in range(self.numWolves)]
         initWolfZeroVel = lambda: np.zeros(self.positionDimension)
@@ -262,7 +262,7 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
             initBlockPos = [sampleBlockPosition() for blockID in range(self.numBlocks)]
             posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
             dist = np.sqrt(np.sum(np.square(posDiff)))
-            if dist > (0.39 * 2 + 0.065 * 2):
+            if dist > (0.325 * 2 + 0.065 * 8):
                 break
         agentsState = [state + vel for state, vel in
                        zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
@@ -583,7 +583,7 @@ class IntegrateState:
 
 class IntegrateStateWithCaughtHistory:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
-                 calSheepCaughtHistory, damping=0.25, dt=0.05):
+                 calSheepCaughtHistory, damping=0.25, dt=0.1):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping
