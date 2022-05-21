@@ -46,12 +46,12 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 1.1
+    mapSize = 1.0
     displaySize = 1.3
     minDistance = mapSize * 1 / 3
     wolfSize = 0.065
     sheepSize = 0.065
-    blockSize = 0.325
+    blockSize = 0.26
 
     screenWidth = int(800)
     screenHeight = int(800)
@@ -95,7 +95,7 @@ def main():
     # --------environment setting-----------
     numWolves = 3
     experimentValues["numWolves"] = numWolves
-    numBlocks = 2
+    numBlocks = 0
     sheepLife = 3
     allSheepPolicy = {}
     allWolfPolicy = {}
@@ -112,7 +112,7 @@ def main():
             entitiesSizeList = [wolfSize] * numWolves + [sheepSize] * numSheeps + [blockSize] * numBlocks
 
             wolfMaxSpeed = 1.0
-            sheepMaxSpeed = 1.2
+            sheepMaxSpeed = 1.0
             blockMaxSpeed = None
 
             entityMaxSpeedList = [wolfMaxSpeed] * numWolves + [sheepMaxSpeed] * numSheeps + [blockMaxSpeed] * numBlocks
@@ -148,7 +148,7 @@ def main():
                                                   getPosFromAgentState)
             calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, numBlocks, entitiesSizeList, isCollision, sheepLife)
             integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.1)
+                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.125)
 
             actionDimReshaped = 2
             cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
@@ -205,7 +205,7 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = '12Wepisode0.1dt1.1Mapsize0.325BlockSize1ForceRatio1.2SheepMaxSpeed'
+                modelFolderName = '12Wepisode0.125dt1.0Mapsize0.26BlockSize1ForceRatio1SheepMaxSpeed'
 
                 maxEpisode = 120000
                 evaluateEpisode = 120000

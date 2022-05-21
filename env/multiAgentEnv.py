@@ -242,12 +242,13 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
 
     def __call__(self, numSheeps):
         sampleOneAgentPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize, self.mapSize, self.positionDimension))]
-        sampleBlockPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize+0.325+0.065*2, self.mapSize-0.325-0.065*2, self.positionDimension))]
+        sampleBlockPosition = lambda:[round(x,2) for x in list(np.random.uniform(-self.mapSize+0.26+0.065*2, self.mapSize-0.26-0.065*2, self.positionDimension))]
 
         initWolfRandomPos = [sampleOneAgentPosition() for wolfID in range(self.numWolves)]
         initWolfZeroVel = lambda: np.zeros(self.positionDimension)
         initSheepRandomPos = [sampleOneAgentPosition() for sheepID in range(numSheeps)]
         initSheepRandomVel = lambda: np.random.uniform(0, 1, self.positionDimension)
+        initBlockPos = []
         initBlockZeroVel = lambda: np.zeros(self.positionDimension)
 
         for i, sheepPos in enumerate(initSheepRandomPos):
@@ -262,7 +263,7 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
             initBlockPos = [sampleBlockPosition() for blockID in range(self.numBlocks)]
             posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
             dist = np.sqrt(np.sum(np.square(posDiff)))
-            if dist > (0.325 * 2 + 0.065 * 8):
+            if dist > (0.26 * 2 + 0.065 * 8):
                 break
         agentsState = [state + vel for state, vel in
                        zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
@@ -583,7 +584,7 @@ class IntegrateState:
 
 class IntegrateStateWithCaughtHistory:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
-                 calSheepCaughtHistory, damping=0.25, dt=0.1):
+                 calSheepCaughtHistory, damping=0.25, dt=0.125):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping
