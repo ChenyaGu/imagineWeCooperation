@@ -95,7 +95,7 @@ class RewardWolf:
 
 class RewardWolfWithBiteAndKill:
     def __init__(self, wolvesID, sheepsID, entitiesSizeList, isCollision, getCaughtHistoryFromAgentState, sheepLife,
-                 biteReward=0.1, killReward=1):
+                 biteReward=0.01, killReward=1):
         self.wolvesID = wolvesID
         self.sheepsID = sheepsID
         self.entitiesSizeList = entitiesSizeList
@@ -584,7 +584,7 @@ class IntegrateState:
 
 class IntegrateStateWithCaughtHistory:
     def __init__(self, numEntities, entitiesMovableList, massList, entityMaxSpeedList,  getVelFromAgentState, getPosFromAgentState,
-                 calSheepCaughtHistory, damping=0.25, dt=0.125):
+                 calSheepCaughtHistory, damping=0.25, dt=0.05):
         self.numEntities = numEntities
         self.entitiesMovableList = entitiesMovableList
         self.damping = damping

@@ -50,7 +50,7 @@ def main():
     displaySize = 1.3
     minDistance = mapSize * 1 / 3
     wolfSize = 0.065
-    sheepSize = 0.065
+    sheepSize = 0.05
     blockSize = 0.26
 
     screenWidth = int(800)
@@ -96,7 +96,7 @@ def main():
     numWolves = 3
     experimentValues["numWolves"] = numWolves
     numBlocks = 0
-    sheepLife = 3
+    sheepLife = 10
     allSheepPolicy = {}
     allWolfPolicy = {}
     allWolfRewardFun = {}
@@ -148,7 +148,7 @@ def main():
                                                   getPosFromAgentState)
             calSheepCaughtHistory = CalSheepCaughtHistory(wolvesID, numBlocks, entitiesSizeList, isCollision, sheepLife)
             integrateState = IntegrateStateWithCaughtHistory(numEntities, entitiesMovableList, massList, entityMaxSpeedList,
-                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.125)
+                                            getVelFromAgentState, getPosFromAgentState, calSheepCaughtHistory, damping=0.25, dt=0.05)
 
             actionDimReshaped = 2
             cov = [0.3 ** 2 for _ in range(actionDimReshaped)]
@@ -205,7 +205,8 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                modelFolderName = '12Wepisode0.125dt1.0Mapsize0.26BlockSize1ForceRatio1SheepMaxSpeed'
+                # modelFolderName = 'shuffleSheepState0.05dt0.05sheepSize0block10sheepLife0.01biteReward1killReward'
+                modelFolderName = '0.05dt0.05sheepSize0block10sheepLife0.01biteReward1killReward'
 
                 maxEpisode = 120000
                 evaluateEpisode = 120000
