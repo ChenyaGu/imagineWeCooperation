@@ -263,7 +263,7 @@ class ResetMultiAgentNewtonChasingVariousSheepWithCaughtHistory:
             initBlockPos = [sampleBlockPosition() for blockID in range(self.numBlocks)]
             posDiff = list(map(lambda x: x[0] - x[1], zip(initBlockPos[0], initBlockPos[1])))
             dist = np.sqrt(np.sum(np.square(posDiff)))
-            if dist > (0.26 * 2 + 0.065 * 8):
+            if dist > (0.26 * 2 + 0.05 * 8):
                 break
         agentsState = [state + vel for state, vel in
                        zip(initWolfRandomPos, [list(initWolfZeroVel()) for ID in range(self.numWolves)])]
