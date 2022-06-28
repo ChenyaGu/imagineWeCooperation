@@ -32,8 +32,8 @@ def main():
     wolfActionUpdateInterval = 1
     sheepActionUpdateInterval = 1
     manipulatedVariables = OrderedDict()
-    manipulatedVariables['sheepNums'] = [1]
-    manipulatedVariables['sheepWolfForceRatio'] = [1.0]
+    manipulatedVariables['sheepNums'] = [2]
+    manipulatedVariables['sheepWolfForceRatio'] = [1.2]
     manipulatedVariables['sheepConcern'] = ['all']
     # manipulatedVariables['sheepConcern'] = ['self', 'all']
     trailNumEachCondition = 10
@@ -46,12 +46,12 @@ def main():
     experimentValues = co.OrderedDict()
     experimentValues["name"] = input("Please enter players' name:").capitalize()
 
-    mapSize = 1.0
+    mapSize = 1.1
     displaySize = 1.3
     minDistance = mapSize * 1 / 3
     wolfSize = 0.065
     sheepSize = 0.05
-    blockSize = 0.26
+    blockSize = 0.2
 
     screenWidth = int(800)
     screenHeight = int(800)
@@ -95,8 +95,8 @@ def main():
     # --------environment setting-----------
     numWolves = 3
     experimentValues["numWolves"] = numWolves
-    numBlocks = 0
-    sheepLife = 10
+    numBlocks = 2
+    sheepLife = 5
     allSheepPolicy = {}
     allWolfPolicy = {}
     allWolfRewardFun = {}
@@ -205,8 +205,11 @@ def main():
                 # -----------model--------
                 # modelFolderName = 'withoutWall3wolves'
                 # modelFolderName = 'withoutWall2wolves'
-                # modelFolderName = 'shuffleSheepState0.05dt0.05sheepSize0block10sheepLife0.01biteReward1killReward'
-                modelFolderName = '0.05dt0.05sheepSize0block10sheepLife0.01biteReward1killReward'
+                # modelFolderName = 'shuffleSheepState0.05dt0.05sheepSize0block3sheepLife0.01biteReward1killReward'
+                # modelFolderName = '0.05dt0.05sheepSize0block5sheepLife1biteReward10killReward'
+                # modelFolderName = 'shuffleSheepState0.05dt0.05sheepSize0block5sheepLife1biteReward10killReward'
+                # modelFolderName = 'sharedReward0.05dt0.05sheepSize0block5sheepLife1biteReward10killReward'
+                modelFolderName = '0.05dt0.05sheepSize2block5sheepLife1biteReward10killReward'
 
                 maxEpisode = 120000
                 evaluateEpisode = 120000
@@ -224,9 +227,12 @@ def main():
 
                 modelFolder = os.path.join(dirName, '..', 'model', modelFolderName)
                 wolfFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}individ_agent".format(numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+                # wolfFileName = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(
+                #     numWolves, numSheeps, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepFileNameSep = "maddpg{}wolves1sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent3".format(numWolves, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 # sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}WolfActCost0.0individ1.0_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
                 sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}individ_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
+                # sheepFileNameAll = "maddpg{}wolves{}sheep{}blocks{}episodes{}stepSheepSpeed{}shared_agent".format(numWolves, numSheepToObserve, numBlocks, maxEpisode, maxTimeStep, modelSheepSpeed)
 
                 wolfModelPaths = [os.path.join(modelFolder, wolfFileName + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves)]
                 sheepModelPathsAll = [os.path.join(modelFolder, sheepFileNameAll + str(i) + str(evaluateEpisode) + 'eps') for i in range(numWolves, numWolves + numSheepToObserve)]
